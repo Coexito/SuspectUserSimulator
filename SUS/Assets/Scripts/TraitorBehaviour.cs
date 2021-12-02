@@ -6,6 +6,7 @@ public class TraitorBehaviour : MonoBehaviour
 {
     private UtilitySystemEngine killingUS;
     private BehaviourTreeEngine pretendBT;
+    private StateMachineEngine generalFSM;
 
 
     private const float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
@@ -69,6 +70,19 @@ public class TraitorBehaviour : MonoBehaviour
         killingUS.CreateUtilityAction("sabotear", () => Sabotage(), riskToLose);
         killingUS.CreateUtilityAction("asesinar", () => Kill(), killingNeed);
         killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
+
+        //General FSM
+
+        generalFSM = new StateMachineEngine();
+
+        State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
+        State workState = generalFSM.CreateSubStateMachine("work", killingUS);
+
+        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(10);
+        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
+
+        generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
+        generalFSM.CreateTransition("decision tomada", workState, decisionTaken, wanderState);
     }
 
     // Start is called before the first frame update
@@ -82,6 +96,7 @@ public class TraitorBehaviour : MonoBehaviour
     {
         pretendBT.Update();
         killingUS.Update();
+        generalFSM.Update();
     }
 
     #region EntryUSDataMethods
@@ -153,5 +168,14 @@ public class TraitorBehaviour : MonoBehaviour
     {
         return ReturnValues.Succeed;
     }
+    #endregion
+
+    #region FSMActions
+
+    private void Wander()
+    {
+
+    }
+
     #endregion
 }
