@@ -4,12 +4,30 @@ using UnityEngine;
 
 public class TraitorBehaviour : MonoBehaviour
 {
+    private UtilitySystemEngine killingUS;
+    private BehaviourTreeEngine pretendBT;
+
+
     private const float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
     private const float TOTAL_AGENTS = 5f; //Total number of agents 
 
     void Awake()
     {
-        UtilitySystemEngine killingUS = new UtilitySystemEngine(true);
+        //Pretend Behaviour Tree
+
+        pretendBT = new BehaviourTreeEngine(true);
+
+        SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
+
+        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", () => WalkToTask(), () => isInObjective());
+        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", () => Work(), () => finishedWorking());
+
+        rootNode.AddChild(walkToTask);
+        rootNode.AddChild(pretendWork);
+
+        //Killing Utility System
+
+        killingUS = new UtilitySystemEngine(true);
 
         //Base factors (data received from the world)
         Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), TOTAL_TASKS, 0f);        
@@ -50,7 +68,7 @@ public class TraitorBehaviour : MonoBehaviour
         //Actions and decisions
         killingUS.CreateUtilityAction("sabotear", () => Sabotage(), riskToLose);
         killingUS.CreateUtilityAction("asesinar", () => Kill(), killingNeed);
-        killingUS.CreateUtilityAction("fingir", () => Pretend(), needToPretend); //Este hay que sustituirlo por un BT
+        killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
     }
 
     // Start is called before the first frame update
@@ -62,6 +80,8 @@ public class TraitorBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        pretendBT.Update();
+        killingUS.Update();
     }
 
     #region EntryUSDataMethods
@@ -107,5 +127,31 @@ public class TraitorBehaviour : MonoBehaviour
 
     }
 
+    #endregion
+
+    #region BTActions
+
+    private void WalkToTask()
+    {
+
+    }
+
+    private void Work()
+    {
+
+    }
+
+    #endregion
+
+    #region BTEvaluationFunctions
+    private ReturnValues isInObjective()
+    {
+        return ReturnValues.Succeed;
+    }
+
+    private ReturnValues finishedWorking()
+    {
+        return ReturnValues.Succeed;
+    }
     #endregion
 }
