@@ -10,6 +10,7 @@ public class TraitorBehaviour : MonoBehaviour
 
     private const float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
     private const float TOTAL_AGENTS = 5f; //Total number of agents 
+    private const int COOLDOWN = 10;
 
     private void Awake()
     {
@@ -46,7 +47,7 @@ public class TraitorBehaviour : MonoBehaviour
         State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
         State workState = generalFSM.CreateSubStateMachine("work", killingUS);
 
-        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(10);
+        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(COOLDOWN);
         PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
 
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
@@ -67,8 +68,17 @@ public class TraitorBehaviour : MonoBehaviour
 
         //Graph factors
         Factor fear1 = new LinearCurve(agentsInLastRoom, -1, 1);
-        //Esta deberia ser una curva sigmoidal
-        Factor riskToLose = new ExpCurve(tasksCompleted); //Decisive factor
+
+        List<Point2D> points = new List<Point2D>();
+        points.Add(new Point2D(0, 0));
+        points.Add(new Point2D(0.15f, 0));
+        points.Add(new Point2D(0.4f, 0.25f));
+        points.Add(new Point2D(0.5f, 0.5f));
+        points.Add(new Point2D(0.6f, 0.75f));
+        points.Add(new Point2D(0.85f, 1));
+        points.Add(new Point2D(1, 1));
+
+        Factor riskToLose = new LinearPartsCurve(tasksCompleted, points); //Decisive factor
 
         //Fusion factors
         List<Factor> factors = new List<Factor>();
