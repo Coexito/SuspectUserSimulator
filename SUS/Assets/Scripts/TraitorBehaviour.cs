@@ -11,7 +11,7 @@ public class TraitorBehaviour : MonoBehaviour
     private const float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
     private const float TOTAL_AGENTS = 5f; //Total number of agents 
 
-    void Awake()
+    private void Awake()
     {
         //Pretend Behaviour Tree
         CreatePretendBehaviourTree();        
