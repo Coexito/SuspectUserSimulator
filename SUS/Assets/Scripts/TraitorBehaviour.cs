@@ -6,14 +6,13 @@ public class TraitorBehaviour : MonoBehaviour
 {
     private StateMachineEngine generalFSM;
     private UtilitySystemEngine killingUS;
-    private BehaviourTreeEngine pretendBT;    
+    private BehaviourTreeEngine pretendBT;
 
-    private const float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
-    private const float TOTAL_AGENTS = 5f; //Total number of agents 
-    private const int COOLDOWN = 10;
+    public SceneController worldController;
+    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 10;
 
     private void Awake()
-    {
+    {        
         //Pretend Behaviour Tree
         CreatePretendBehaviourTree();        
 
@@ -27,7 +26,7 @@ public class TraitorBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        
     }
 
     // Update is called once per frame
@@ -47,7 +46,7 @@ public class TraitorBehaviour : MonoBehaviour
         State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
         State workState = generalFSM.CreateSubStateMachine("work", killingUS);
 
-        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(COOLDOWN);
+        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(cooldown);
         PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
 
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
@@ -59,8 +58,8 @@ public class TraitorBehaviour : MonoBehaviour
         killingUS = new UtilitySystemEngine(true);
 
         //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), TOTAL_TASKS, 0f);
-        Factor agentsInLastRoom = new LeafVariable(() => GetNumberOfAgentsInLastRoom(), TOTAL_AGENTS, 0f);
+        Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), worldController.GetTotalTasks(), 0f);
+        Factor agentsInLastRoom = new LeafVariable(() => GetNumberOfAgentsInLastRoom(), worldController.GetTotalHonestAgents(), 0f);
 
         Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
         Factor needToPretend = new LeafVariable(() => Get2OrMoreAgentsInRoom(), 1f, 0f); //Decisive factor

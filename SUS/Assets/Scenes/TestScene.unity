@@ -249,6 +249,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3861dea6c70b4d74888ad41c957d4831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldController: {fileID: 392724019}
+  cooldown: 10
 --- !u!1 &339795524
 GameObject:
   m_ObjectHideFlags: 0
@@ -375,6 +377,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0bd547ec0713ea4689a1e697cd6c597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldController: {fileID: 392724019}
   defaultSpeed: 5
 --- !u!1 &392724018
 GameObject:
@@ -405,6 +408,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5351caf3071878b4e902ac420c9c10ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  TOTAL_TASKS: 20
+  totalHonestAgents: 5
+  totalTraitorAgents: 2
   sabotageHappening: 0
   workingPositions: []
 --- !u!4 &392724020
