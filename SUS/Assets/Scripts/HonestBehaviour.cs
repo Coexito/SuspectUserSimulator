@@ -9,7 +9,7 @@ public class HonestBehaviour : MonoBehaviour
 
     private HonestAgent thisAgent;
     public SceneController worldController;
-    [SerializeField] private float defaultSpeed = 5f;
+    [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     void Awake()
     {

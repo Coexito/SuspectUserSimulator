@@ -10,6 +10,7 @@ public class TraitorBehaviour : MonoBehaviour
 
     public SceneController worldController;
     [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 10;
+    [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     private void Awake()
     {        
