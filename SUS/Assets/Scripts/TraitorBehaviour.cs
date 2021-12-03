@@ -4,44 +4,81 @@ using UnityEngine;
 
 public class TraitorBehaviour : MonoBehaviour
 {
-    private UtilitySystemEngine killingUS;
-    private BehaviourTreeEngine pretendBT;
     private StateMachineEngine generalFSM;
-
+    private UtilitySystemEngine killingUS;
+    private BehaviourTreeEngine pretendBT;    
 
     private const float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
     private const float TOTAL_AGENTS = 5f; //Total number of agents 
+    private const int COOLDOWN = 10;
 
-    void Awake()
+    private void Awake()
     {
         //Pretend Behaviour Tree
-
-        pretendBT = new BehaviourTreeEngine(true);
-
-        SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
-
-        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", () => WalkToTask(), () => isInObjective());
-        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", () => Work(), () => finishedWorking());
-
-        rootNode.AddChild(walkToTask);
-        rootNode.AddChild(pretendWork);
+        CreatePretendBehaviourTree();        
 
         //Killing Utility System
+        CreateKillingUtilitySystem();        
 
+        //General FSM
+        CreateGeneralFSM();        
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        pretendBT.Update();
+        killingUS.Update();
+        generalFSM.Update();
+    }
+
+    #region CreateMachines
+
+    private void CreateGeneralFSM()
+    {
+        generalFSM = new StateMachineEngine();
+
+        State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
+        State workState = generalFSM.CreateSubStateMachine("work", killingUS);
+
+        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(COOLDOWN);
+        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
+
+        generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
+        generalFSM.CreateTransition("decision tomada", workState, decisionTaken, wanderState);
+    }
+
+    private void CreateKillingUtilitySystem()
+    {
         killingUS = new UtilitySystemEngine(true);
 
         //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), TOTAL_TASKS, 0f);        
-        Factor agentsInLastRoom = new LeafVariable(() => GetNumberOfAgentsInLastRoom(), TOTAL_AGENTS, 0f); 
-        
+        Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), TOTAL_TASKS, 0f);
+        Factor agentsInLastRoom = new LeafVariable(() => GetNumberOfAgentsInLastRoom(), TOTAL_AGENTS, 0f);
+
         Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
         Factor needToPretend = new LeafVariable(() => Get2OrMoreAgentsInRoom(), 1f, 0f); //Decisive factor
         Factor fear2 = new LeafVariable(() => GetAgentLeft(), 1f, 0f);
 
         //Graph factors
         Factor fear1 = new LinearCurve(agentsInLastRoom, -1, 1);
-        //Esta deberia ser una curva sigmoidal
-        Factor riskToLose = new ExpCurve(tasksCompleted); //Decisive factor
+
+        List<Point2D> points = new List<Point2D>();
+        points.Add(new Point2D(0, 0));
+        points.Add(new Point2D(0.15f, 0));
+        points.Add(new Point2D(0.4f, 0.25f));
+        points.Add(new Point2D(0.5f, 0.5f));
+        points.Add(new Point2D(0.6f, 0.75f));
+        points.Add(new Point2D(0.85f, 1));
+        points.Add(new Point2D(1, 1));
+
+        Factor riskToLose = new LinearPartsCurve(tasksCompleted, points); //Decisive factor
 
         //Fusion factors
         List<Factor> factors = new List<Factor>();
@@ -70,34 +107,22 @@ public class TraitorBehaviour : MonoBehaviour
         killingUS.CreateUtilityAction("sabotear", () => Sabotage(), riskToLose);
         killingUS.CreateUtilityAction("asesinar", () => Kill(), killingNeed);
         killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
-
-        //General FSM
-
-        generalFSM = new StateMachineEngine();
-
-        State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
-        State workState = generalFSM.CreateSubStateMachine("work", killingUS);
-
-        TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(10);
-        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
-
-        generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
-        generalFSM.CreateTransition("decision tomada", workState, decisionTaken, wanderState);
     }
 
-    // Start is called before the first frame update
-    void Start()
+    private void CreatePretendBehaviourTree()
     {
+        pretendBT = new BehaviourTreeEngine(true);
 
+        SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
+
+        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", () => WalkToTask(), () => isInObjective());
+        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", () => Work(), () => finishedWorking());
+
+        rootNode.AddChild(walkToTask);
+        rootNode.AddChild(pretendWork);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        pretendBT.Update();
-        killingUS.Update();
-        generalFSM.Update();
-    }
+    #endregion
 
     #region EntryUSDataMethods
 
