@@ -42,7 +42,7 @@ public class HonestBehaviour : MonoBehaviour
 
 
         // States
-        State initialState = generalFSM.CreateEntryState("idle", () => { generalFSM.Fire("start working"); });
+        State initialState = generalFSM.CreateEntryState("idle");
             // Default substates
         State defaultState = generalFSM.CreateSubStateMachine("default", defaultFSM);
         State wanderState = defaultFSM.CreateEntryState("wander", () => Wander());
