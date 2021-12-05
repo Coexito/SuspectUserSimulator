@@ -31,7 +31,7 @@ public class TaskGenerator : MonoBehaviour
         int num = Random.Range(0, tasksCoords.Count); // random task to generate
 
         // Si no hay objeto ni estamos ya generandolo, lanzamos la rutina de generacion
-        if (!generating && SceneController.instance.availableTaks.Count < MAX_TASKS_AVAILABLE)
+        if (!generating && SceneController.instance.availableTasks.Count < MAX_TASKS_AVAILABLE)
             StartCoroutine(GenerateTask(num));
     }
 
@@ -44,7 +44,7 @@ public class TaskGenerator : MonoBehaviour
         yield return new WaitForSeconds(Random.Range(minSecs, maxSecs));
 
         // Generates new task in the world        
-        SceneController.instance.availableTaks.Add(tasksCoords[num]);
+        SceneController.instance.availableTasks.Add(tasksCoords[num]);
         
         generating = false;
     }

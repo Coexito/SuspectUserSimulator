@@ -17,17 +17,17 @@ public class SceneController : MonoBehaviour
 
     // Data structures
     public List<Agent> agents;
-    public List<Vector3> availableTaks;
+    public List<Vector3> availableTasks;
     
     void Awake()
     {
         instance = this;
-        availableTaks = new List<Vector3>();
+        availableTasks = new List<Vector3>();
     }
 
     public void TakeTask(Vector3 task)
     {
-        availableTaks.Remove(task);
+        availableTasks.Remove(task);
     }
     public float GetTotalTasks()
     {

@@ -14,7 +14,7 @@ public class HonestBehaviour : MonoBehaviour
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     private NavMeshAgent agent;
-    private Vector3 currentTask = Vector3.zero;
+    [SerializeField]private Vector3 currentTask = Vector3.zero;
 
     void Awake()
     {
@@ -22,54 +22,69 @@ public class HonestBehaviour : MonoBehaviour
         thisAgent = new HonestAgent(defaultSpeed); 
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
+        agent.speed = this.defaultSpeed;
 
-        CreateFMS();
         CreateBT();
+        CreateFMS();
+        
+
     }
 
     void Update()
     {
-        generalFSM.Update();
-        defaultFSM.Update();
         workBT.Update();
+        defaultFSM.Update();
+
+        //generalFSM.Update();
     }
 
     private void CreateFMS()
     {
-        //General FSM
-        generalFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
-        defaultFSM = new StateMachineEngine(BehaviourEngine.IsASubmachine);
-
-
-        // States
-        State initialState = generalFSM.CreateEntryState("idle");
-            // Default substates
-        State defaultState = generalFSM.CreateSubStateMachine("default", defaultFSM);
-        State wanderState = defaultFSM.CreateEntryState("wander", () => Wander());
-        State workState = defaultFSM.CreateState("work", Work);
-            // Other general states
-        State votingState = generalFSM.CreateState("vote", Vote);
-        State deadState = generalFSM.CreateState("dead", Die);
-
+        // Default submachine for Working
+        defaultFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
+        // Default substates
+        State wanderState = defaultFSM.CreateEntryState("wander", Wander);
+        State waitingState = defaultFSM.CreateState("wait", Wait);
+        State workState = defaultFSM.CreateSubStateMachine("work", workBT);
 
         // Perceptions
-        Perception born = generalFSM.CreatePerception<TimerPerception>(3);
+        PushPerception taskFound = defaultFSM.CreatePerception<PushPerception>();
+        PushPerception taskNotFound = defaultFSM.CreatePerception<PushPerception>();
+        TimerPerception waitingForTask = defaultFSM.CreatePerception<TimerPerception>(2);   // Time to wait and search for a task again
+        PushPerception taskDone2 = defaultFSM.CreatePerception<PushPerception>();
+        BehaviourTreeStatusPerception taskDone = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Succeed);
+        
+        // Transitions 
+        defaultFSM.CreateTransition("task found", wanderState, taskFound, workState);
+        defaultFSM.CreateTransition("not found", wanderState, taskNotFound, waitingState);
+        defaultFSM.CreateTransition("wait to task", waitingState, waitingForTask, wanderState);
+        workBT.CreateExitTransition("BT done", workState, taskDone, wanderState);
+        defaultFSM.CreateTransition("task done", workState, taskDone2, wanderState);  
 
-        Perception taskFound = defaultFSM.CreatePerception<TimerPerception>(10);
-        Perception taskDone = defaultFSM.CreatePerception<PushPerception>();
-        Perception arrivedToTask = generalFSM.CreatePerception<ArriveToDestination>(new ArriveToDestination());
-        Perception voteCalled = generalFSM.CreatePerception<PushPerception>();
-        Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
-        Perception youWereKilled = generalFSM.CreatePerception<PushPerception>();
+        // //General FSM
+        // generalFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
+
+        // // States
+        // State initialState = generalFSM.CreateEntryState("idle");
+            
+        //     // Other general states
+        // State votingState = generalFSM.CreateState("vote", Vote);
+        // State deadState = generalFSM.CreateState("dead", Die);
+
+        // // Perceptions
+        // Perception born = generalFSM.CreatePerception<TimerPerception>(3);
+
+        // Perception voteCalled = generalFSM.CreatePerception<PushPerception>();
+        // Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
+        // Perception youWereKilled = generalFSM.CreatePerception<PushPerception>();
 
 
         // Transitions
-        generalFSM.CreateTransition("start working", initialState, born, defaultState); // When born, start working
-        defaultFSM.CreateTransition("task found", wanderState, taskFound, workState);
-        defaultFSM.CreateTransition("task done", workState, taskDone, wanderState);
-        generalFSM.CreateTransition("vote called", defaultState, voteCalled, votingState);
-        generalFSM.CreateTransition("vote finished", votingState, voteCalled, defaultState);
-        generalFSM.CreateTransition("killed", defaultState, youWereKilled, deadState);
+        //generalFSM.CreateTransition("start working", initialState, born, defaultState); // When born, start working
+        
+        // generalFSM.CreateTransition("vote called", defaultState, voteCalled, votingState);
+        // generalFSM.CreateTransition("vote finished", votingState, voteCalled, defaultState);
+        // generalFSM.CreateTransition("killed", defaultState, youWereKilled, deadState);
 
     }
     private void CreateBT()
@@ -80,34 +95,40 @@ public class HonestBehaviour : MonoBehaviour
         SequenceNode rootNode = workBT.CreateSequenceNode("root", false);
 
         LeafNode walkToTask = workBT.CreateLeafNode("walk to task", () => WalkToTask(currentTask), () => isInObjective());
-        LeafNode work = workBT.CreateLeafNode("work", () => Work(), () => finishedWorking());
+        LeafNode work = workBT.CreateLeafNode("work", () => WorkBT(), () => finishedWorking());
 
         rootNode.AddChild(walkToTask);
         rootNode.AddChild(work);
+
+        workBT.SetRootNode(rootNode);
     }
 
 
     #region FSMActions
     private void Wander()
     {
-        foreach (Vector3 task in SceneController.instance.availableTaks)
+        Debug.Log("Enters in wander");
+
+        foreach (Vector3 task in SceneController.instance.availableTasks)
         {
             // When encountering the first taks, take it and stop searching
             currentTask = task;
             SceneController.instance.TakeTask(task);
 
-            //////////// Problema con el BT (leaf walkToTask)
             defaultFSM.Fire("task found");
-            //WalkToTask(currentTask);
-            ////////////
+            Debug.Log("Task taken");
 
             break;
         }
+
+        defaultFSM.Fire("not found");
+        
     }
 
-    private void Work()
+    private void Wait()
     {
-        //workBT.Fire();
+        // Caminar aleatoriamente
+        Debug.Log("Waiting to find another task");
     }
 
     private void Vote()
@@ -124,19 +145,39 @@ public class HonestBehaviour : MonoBehaviour
     #region BTActions
     private void WalkToTask(Vector3 coords)
     {
+        Debug.Log("Walking to task");
         agent.SetDestination(coords);
+    }
+
+    private void WorkBT()
+    {
+        //workBT.Fire();
     }
     #endregion
     
     #region BTEvaluationFunctions
     private ReturnValues isInObjective()
     {
-        return ReturnValues.Succeed;
+        // Checks if agent position is task position
+        if(Vector3.Distance(this.transform.position, currentTask) < 5)
+        {
+            Debug.Log("I've arrived");
+            return ReturnValues.Succeed;
+        } 
+        else
+        {
+            Debug.Log("going...");
+            return ReturnValues.Running;
+        }
+            
+        
     }
 
     private ReturnValues finishedWorking()
     {
-        generalFSM.Fire("task done");
+        Debug.Log("task done");
+
+        defaultFSM.Fire("task done");
         return ReturnValues.Succeed;
     }
     #endregion
