@@ -105,7 +105,21 @@ public class HonestBehaviour : MonoBehaviour
     #region FSMActions
     private void Wander()
     {
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));
         SceneController.instance.IWantATask(this);
+    }
+
+    // Get Random Point on a Navmesh surface
+    private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
+        // Get Random Point inside Sphere which position is center, radius is maxDistance
+        Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
+
+        NavMeshHit hit; // NavMesh Sampling Info Container
+        
+        // from randomPos find a nearest point on NavMesh surface in range of maxDistance
+        NavMesh.SamplePosition(randomPos, out hit, maxDistance, NavMesh.AllAreas);
+
+        return hit.position;
     }
 
     public void setTask(Vector3 task)
@@ -143,7 +157,6 @@ public class HonestBehaviour : MonoBehaviour
         */
         Debug.Log("Im dead :(");
         this.GetComponentInParent<CapsuleCollider>().enabled = false;
-        //thisAgent.GetParentComponent<CapsuleCollider>().enabled = false;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
         //Destroy(this.gameObject);
@@ -160,17 +173,15 @@ public class HonestBehaviour : MonoBehaviour
 
     private void WorkBT()
     {
-        Debug.Log("Working");
         StartCoroutine(TimerWork());
     }
 
     private IEnumerator TimerWork()
     {
-        Debug.Log("Working1");
+        // Stops the agent until he finishes the task
         agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
-        agent.speed=thisAgent.getSpeed();
-        Debug.Log("Working5");
+        agent.speed = thisAgent.getSpeed();
     }
     #endregion
 
