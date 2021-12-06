@@ -16,7 +16,7 @@ public class TaskGenerator : MonoBehaviour
     [SerializeField] private float minSecs = 1.0f;        // Minima cantidad de segundos antes de que aparezca el objeto
     [SerializeField] private float maxSecs = 5.0f;        // Maxima cantidad de segundos antes de que aparezca el objeto
     
-    private const int MAX_TASKS_AVAILABLE = 3;            // Máximo de tareas activas que puede haber en el mundo
+    [SerializeField] private int MAX_TASKS_AVAILABLE;     // Máximo de tareas activas que puede haber en el mundo
     private bool generating = false;    // para saber si se está generando una tarea en el momento
 
 
@@ -24,6 +24,11 @@ public class TaskGenerator : MonoBehaviour
     {
         tasksCoords = new List<Vector3>();
         SetTasksCoords(tasksCoords);
+
+    }
+
+    private void Start() {
+        MAX_TASKS_AVAILABLE = Mathf.RoundToInt(SceneController.instance.GetTotalHonestAgents() / 2); 
     }
 
     void Update()
