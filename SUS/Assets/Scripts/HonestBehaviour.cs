@@ -142,6 +142,8 @@ public class HonestBehaviour : MonoBehaviour
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
         Debug.Log("Im dead :(");
+        this.GetComponentInParent<CapsuleCollider>().enabled = false;
+        //thisAgent.GetParentComponent<CapsuleCollider>().enabled = false;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
         //Destroy(this.gameObject);
