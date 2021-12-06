@@ -48,7 +48,7 @@ public class SceneController : MonoBehaviour
             Instantiate(honestPrefab, new Vector3(10f, 11f, 0f), Quaternion.identity);
         }
 
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 0; i++)
         {
             Instantiate(traitorPrefab, new Vector3(10f, 11f, 0f), Quaternion.identity);
         }
