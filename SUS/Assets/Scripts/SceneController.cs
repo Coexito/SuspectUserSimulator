@@ -7,6 +7,7 @@ public class SceneController : MonoBehaviour
     public static SceneController instance;
 
     [SerializeField] private GameObject honestPrefab;
+    [SerializeField] private GameObject traitorPrefab;
 
     // World variables
     [SerializeField] [Header("Total tasks needed to win:")] private float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
@@ -14,7 +15,9 @@ public class SceneController : MonoBehaviour
     [Header("Total agents:")]
     [SerializeField] private float totalHonestAgents = 5f; 
     
-    [SerializeField] private float totalTraitorAgents = 2f; 
+    [SerializeField] private float totalTraitorAgents = 2f;
+
+    private int tasksDone = 0;
 
     [HideInInspector] public bool sabotageHappening;
 
@@ -43,6 +46,11 @@ public class SceneController : MonoBehaviour
         for(int i = 0; i < totalHonestAgents; i++)
         {
             Instantiate(honestPrefab, new Vector3(10f, 11f, 0f), Quaternion.identity);
+        }
+
+        for (int i = 0; i < 1; i++)
+        {
+            Instantiate(traitorPrefab, new Vector3(10f, 11f, 0f), Quaternion.identity);
         }
     }
 
@@ -84,6 +92,16 @@ public class SceneController : MonoBehaviour
     public float GetTotalHonestAgents()
     {
         return totalHonestAgents;
+    }
+
+    public void TaskDone()
+    {
+        tasksDone++;
+    }
+
+    public float GetTasksDone()
+    {
+        return (float) tasksDone;
     }
 
     public float GetTotalTraitorAgents()

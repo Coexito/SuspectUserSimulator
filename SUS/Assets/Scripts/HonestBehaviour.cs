@@ -135,6 +135,7 @@ public class HonestBehaviour : MonoBehaviour
     private void WorkBT()
     {
         StartCoroutine(TimerWork());
+        SceneController.instance.TaskDone();
     }
 
     private IEnumerator TimerWork()
@@ -155,8 +156,6 @@ public class HonestBehaviour : MonoBehaviour
         {
             return ReturnValues.Running;
         }
-
-
     }
 
     private ReturnValues finishedWorking()
