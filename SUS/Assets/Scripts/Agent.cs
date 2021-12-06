@@ -20,5 +20,14 @@ public class Agent
         speed = _speed;
     }
     
+    public void setSpeed(float s)
+    {
+        speed = s;
+    }
+    public float getSpeed()
+    {
+        return this.speed;
+    }
+    
 
 }

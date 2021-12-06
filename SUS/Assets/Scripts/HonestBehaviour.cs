@@ -158,12 +158,17 @@ public class HonestBehaviour : MonoBehaviour
 
     private void WorkBT()
     {
+        Debug.Log("Working");
         StartCoroutine(TimerWork());
     }
 
     private IEnumerator TimerWork()
     {
+        Debug.Log("Working1");
+        agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
+        agent.speed=thisAgent.getSpeed();
+        Debug.Log("Working5");
     }
     #endregion
 
