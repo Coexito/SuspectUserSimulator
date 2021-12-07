@@ -5,6 +5,7 @@ using UnityEngine.AI;
 
 public class TraitorBehaviour : MonoBehaviour
 {
+    private StateMachineEngine defaultFSM;
     private StateMachineEngine generalFSM;
     private UtilitySystemEngine killingUS;
     private BehaviourTreeEngine pretendBT;
@@ -14,11 +15,13 @@ public class TraitorBehaviour : MonoBehaviour
 
     private TraitorAgent thisAgent;
     private NavMeshAgent agent;
-    [SerializeField] private Vector3 currentTask = new Vector3(-13.6f, 10.3f, 19.7f);
+    [SerializeField] private Vector3 currentTask = Vector3.zero;
 
     [SerializeField] private float timeWorking = 5f;
 
     private float totalTasksDone;
+    private bool notWorking = true;
+    private bool vote = false;
 
     private void Awake()
     {
@@ -32,7 +35,8 @@ public class TraitorBehaviour : MonoBehaviour
 
         pretendBT = new BehaviourTreeEngine(true);
         killingUS = new UtilitySystemEngine(true);
-        generalFSM = new StateMachineEngine();
+        generalFSM = new StateMachineEngine(true);
+        defaultFSM = new StateMachineEngine();
 
         //Pretend Behaviour Tree
         CreatePretendBehaviourTree();        
@@ -41,7 +45,7 @@ public class TraitorBehaviour : MonoBehaviour
         CreateKillingUtilitySystem();        
 
         //General FSM
-        CreateGeneralFSM();        
+        CreateFSM();        
     }
 
     // Update is called once per frame
@@ -50,6 +54,7 @@ public class TraitorBehaviour : MonoBehaviour
         pretendBT.Update();
         killingUS.Update();
         generalFSM.Update();
+        defaultFSM.Update();
     }
 
     void FixedUpdate()
@@ -59,8 +64,10 @@ public class TraitorBehaviour : MonoBehaviour
 
     #region CreateMachines
 
-    private void CreateGeneralFSM()
-    {        
+    private void CreateFSM()
+    {
+        //Create submachine
+
         State wanderState = generalFSM.CreateEntryState("wander", Wander);
         State workState = generalFSM.CreateSubStateMachine("work", killingUS);
 
@@ -69,6 +76,24 @@ public class TraitorBehaviour : MonoBehaviour
 
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
         killingUS.CreateExitTransition("decision tomada", workState, decisionTaken, wanderState);
+
+        //Create supermachine
+
+        // States
+        State initialState = defaultFSM.CreateEntryState("idle");
+        State generalState = defaultFSM.CreateSubStateMachine("default", generalFSM);
+        State votingState = defaultFSM.CreateState("vote", Vote);
+
+        // Perceptions
+        Perception born = defaultFSM.CreatePerception<TimerPerception>(0.25f);
+        Perception voteCalled = defaultFSM.CreatePerception<ValuePerception>(() => vote == true);
+        Perception voteFinished = defaultFSM.CreatePerception<PushPerception>();
+
+
+        // Transitions
+        defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
+        generalFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
+        defaultFSM.CreateTransition("vote finished", votingState, voteCalled, initialState);
     }
 
     private void CreateKillingUtilitySystem()
@@ -167,7 +192,7 @@ public class TraitorBehaviour : MonoBehaviour
     #region UtilityActionsMethods
 
     private void Sabotage()
-    {
+    {        
         Debug.Log("He decidido sabotear");
     }
 
@@ -182,6 +207,8 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void WalkToTask()
     {
+        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count - 1));
+        currentTask = TaskGenerator.instance.tasksCoords[taskSelected];
         agent.SetDestination(currentTask);
     }
 
@@ -193,7 +220,11 @@ public class TraitorBehaviour : MonoBehaviour
 
     private IEnumerator TimerWork()
     {
+        // Stops the agent until he finishes the task        
+        agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
+        notWorking = true;
+        agent.speed = thisAgent.getSpeed();
     }
 
     #endregion
@@ -204,6 +235,7 @@ public class TraitorBehaviour : MonoBehaviour
         // Checks if agent position is task position
         if (Vector3.Distance(this.transform.position, currentTask) < 3)
         {
+            notWorking = false;
             return ReturnValues.Succeed;
         }
         else
@@ -214,7 +246,13 @@ public class TraitorBehaviour : MonoBehaviour
 
     private ReturnValues finishedWorking()
     {
-        return ReturnValues.Succeed;
+        if (notWorking)
+        {
+            currentTask = Vector3.zero;
+            return ReturnValues.Succeed;
+        }
+        else
+            return ReturnValues.Running;
     }
     #endregion
 
@@ -222,7 +260,50 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Wander()
     {
-        Debug.Log("Estado Wander");
+        notWorking = true;
+
+        agent.speed = thisAgent.getSpeed(); // Sets the default speed
+
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task        
+    }
+
+    // Get Random Point on a Navmesh surface
+    private Vector3 GetRandomPoint(Vector3 center, float maxDistance)
+    {
+        // Get Random Point inside Sphere which position is center, radius is maxDistance
+        Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
+
+        NavMeshHit hit; // NavMesh Sampling Info Container
+
+        // from randomPos find a nearest point on NavMesh surface in range of maxDistance
+        NavMesh.SamplePosition(randomPos, out hit, maxDistance, NavMesh.AllAreas);
+
+        return hit.position;
+    }
+
+    private void Vote()
+    {
+        /*
+            Cuando se vota, todos los agentes se paralizan hasta que acabe la votación.
+            Se muestra por pantalla el proceso de votación a través de una interfaz
+        */
+
+        vote = false;
+
+        // Dismisses his task
+        currentTask = Vector3.zero;
+        agent.speed = 0;
+        agent.SetDestination(transform.position);
+    }
+
+    public void FireVote()
+    {
+        vote = true;
+    }
+
+    public void FireWander()
+    {
+        generalFSM.Fire("vote finished");
     }
 
     #endregion

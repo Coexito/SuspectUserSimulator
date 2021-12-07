@@ -10,4 +10,23 @@ public class TraitorAgent : Agent
     {
         agentsFoundInKillingRoom = new Dictionary<string, Agent>();
     }
+
+    public override void StartVote()
+    {
+        base.StartVote();
+        TraitorBehaviour behaviour = GetComponent<TraitorBehaviour>();
+
+        if (behaviour)
+            behaviour.FireVote();
+
+    }
+
+    public override void FinishVote()
+    {
+        base.FinishVote();
+        TraitorBehaviour behaviour = GetComponent<TraitorBehaviour>();
+
+        if (behaviour)
+            behaviour.FireWander();
+    }
 }

@@ -18,6 +18,7 @@ public class HonestBehaviour : MonoBehaviour
     private bool taskFound = false;
     private bool vote = false;
     private bool killed = false;
+    private bool notWorking = true;
 
     [SerializeField] private float timeWorking = 5f;
 
@@ -106,7 +107,7 @@ public class HonestBehaviour : MonoBehaviour
     #region FSMActions
     private void Wander()
     {
-        Debug.Log("Entra en wander");
+        notWorking = true;
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
         SceneController.instance.IWantATask(this);  // Asks for a task
 
@@ -196,23 +197,22 @@ public class HonestBehaviour : MonoBehaviour
     private void WalkToTask(Vector3 coords)
     {
         // Resets the bools
-        Debug.Log("going...");
         taskFound = false;
         agent.SetDestination(coords);
     }
 
     private void WorkBT()
     {
-        Debug.Log("Entra en WorkBT");
         StartCoroutine(TimerWork());
         SceneController.instance.TaskDone();
     }
 
     private IEnumerator TimerWork()
     {
-        // Stops the agent until he finishes the task
+        // Stops the agent until he finishes the task        
         agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
+        notWorking = true;
         agent.speed = thisAgent.getSpeed();
     }
     #endregion
@@ -229,6 +229,7 @@ public class HonestBehaviour : MonoBehaviour
             // Checks if agent position is task position
             if (Vector3.Distance(this.transform.position, currentTask) < 3)
             {
+                notWorking = false;
                 return ReturnValues.Succeed;
             }
             else
@@ -246,8 +247,13 @@ public class HonestBehaviour : MonoBehaviour
         }
         else
         {
-            currentTask = Vector3.zero;
-            return ReturnValues.Succeed;
+            if (notWorking)
+            {
+                currentTask = Vector3.zero;
+                return ReturnValues.Succeed;
+            }
+            else
+                return ReturnValues.Running;
         }
     }
     #endregion
