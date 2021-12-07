@@ -18,8 +18,12 @@ public class TraitorBehaviour : MonoBehaviour
 
     [SerializeField] private float timeWorking = 5f;
 
+    private float totalTasksDone;
+
     private void Awake()
     {
+        totalTasksDone = 0f;
+
         // Creates the object that represents this agent & has data structures
         thisAgent = new TraitorAgent(defaultSpeed);
 
@@ -42,10 +46,15 @@ public class TraitorBehaviour : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
+    {  
         pretendBT.Update();
         killingUS.Update();
         generalFSM.Update();
+    }
+
+    void FixedUpdate()
+    {
+        totalTasksDone = SceneController.instance.GetTasksDone();
     }
 
     #region CreateMachines
@@ -65,7 +74,7 @@ public class TraitorBehaviour : MonoBehaviour
     private void CreateKillingUtilitySystem()
     {
         //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(() => SceneController.instance.GetTasksDone(), SceneController.instance.GetTotalTasks(), 0f);
+        Factor tasksCompleted = new LeafVariable(() => totalTasksDone, SceneController.instance.GetTotalTasks(), 0f);
         Factor agentsInLastRoom = new LeafVariable(GetNumberOfAgentsInLastRoom, SceneController.instance.GetTotalHonestAgents(), 0f);
 
         Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
