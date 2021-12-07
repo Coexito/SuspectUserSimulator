@@ -31,7 +31,10 @@ public class HonestBehaviour : MonoBehaviour
         workBT = new BehaviourTreeEngine(true);
 
         // Default submachine for Working
-        defaultFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
+        defaultFSM = new StateMachineEngine(BehaviourEngine.IsASubmachine);
+        //General FSM
+        generalFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
+
         CreateBT();
         CreateFMS();
     }
@@ -40,8 +43,13 @@ public class HonestBehaviour : MonoBehaviour
     {
         workBT.Update();
         defaultFSM.Update();
+        generalFSM.Update();
 
-        //generalFSM.Update();
+
+        if(Input.GetKeyDown(KeyCode.Space))
+            defaultFSM.Fire("killed");
+        else if(Input.GetKeyDown(KeyCode.V))
+            defaultFSM.Fire("vote called");
     }
 
     private void CreateFMS()
@@ -59,36 +67,29 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM.CreateTransition("task found", wanderState, task, workState);
         workBT.CreateExitTransition("BT done", workState, taskDone, wanderState);
 
+        
+        // States
+        State initialState = generalFSM.CreateEntryState("idle");
+        State defaultState = generalFSM.CreateSubStateMachine("default", defaultFSM);
+        State votingState = generalFSM.CreateState("vote", Vote);
+        State deadState = generalFSM.CreateState("dead", Die);
 
-        // //General FSM
-        // generalFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
-
-        // // States
-        // State initialState = generalFSM.CreateEntryState("idle");
-
-        //     // Other general states
-        // State votingState = generalFSM.CreateState("vote", Vote);
-        // State deadState = generalFSM.CreateState("dead", Die);
-
-        // // Perceptions
-        // Perception born = generalFSM.CreatePerception<TimerPerception>(3);
-
-        // Perception voteCalled = generalFSM.CreatePerception<PushPerception>();
-        // Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
-        // Perception youWereKilled = generalFSM.CreatePerception<PushPerception>();
+        // Perceptions
+        Perception born = generalFSM.CreatePerception<TimerPerception>(1f);
+        Perception voteCalled = generalFSM.CreatePerception<PushPerception>();
+        Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
+        Perception youWereKilled = generalFSM.CreatePerception<PushPerception>();
 
 
         // Transitions
-        //generalFSM.CreateTransition("start working", initialState, born, defaultState); // When born, start working
-
-        // generalFSM.CreateTransition("vote called", defaultState, voteCalled, votingState);
-        // generalFSM.CreateTransition("vote finished", votingState, voteCalled, defaultState);
-        // generalFSM.CreateTransition("killed", defaultState, youWereKilled, deadState);
+        generalFSM.CreateTransition("born", initialState, born, defaultState); // When born, enters the default state & starts looking for work
+        defaultFSM.CreateExitTransition("vote called", workState, voteCalled, votingState);
+        generalFSM.CreateTransition("vote finished", votingState, voteCalled, defaultState);
+        defaultFSM.CreateExitTransition("killed", workState, youWereKilled, deadState);
 
     }
     private void CreateBT()
     {
-
         SequenceNode rootNode = workBT.CreateSequenceNode("root", false);
 
         LeafNode walkToTask = workBT.CreateLeafNode("walk to task", () => WalkToTask(currentTask), () => isInObjective());
@@ -104,7 +105,21 @@ public class HonestBehaviour : MonoBehaviour
     #region FSMActions
     private void Wander()
     {
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));
         SceneController.instance.IWantATask(this);
+    }
+
+    // Get Random Point on a Navmesh surface
+    private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
+        // Get Random Point inside Sphere which position is center, radius is maxDistance
+        Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
+
+        NavMeshHit hit; // NavMesh Sampling Info Container
+        
+        // from randomPos find a nearest point on NavMesh surface in range of maxDistance
+        NavMesh.SamplePosition(randomPos, out hit, maxDistance, NavMesh.AllAreas);
+
+        return hit.position;
     }
 
     public void setTask(Vector3 task)
@@ -118,10 +133,34 @@ public class HonestBehaviour : MonoBehaviour
     }
 
     private void Vote()
-    { }
+    {
+        /*
+            Cuando se vota, todos los agentes se paralizan hasta que acabe la votación.
+            Se muestra por pantalla el proceso de votación a través de una interfaz
+            Al acabar la votación, se vuelve dentro de defaultFSM (vuelve a buscar trabajo)
+            
+            Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
+        */
+        Debug.Log("Juanjo for president");
+        agent.SetDestination(transform.position);
+        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
+    }
 
     private void Die()
-    { }
+    {
+        /*
+            Cuando el agente muere, se queda quieto en el sitio e informa al mundo sobre ello.
+            El mundo guarda su posición (donde ha muerto) y quién le ha matado.
+            Se sustituye su modelo por un prefab de cadáver.
+
+            Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
+        */
+        Debug.Log("Im dead :(");
+        this.GetComponentInParent<CapsuleCollider>().enabled = false;
+        agent.SetDestination(transform.position);
+        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
+        //Destroy(this.gameObject);
+    }
     #endregion
 
     #region BTActions
@@ -140,7 +179,10 @@ public class HonestBehaviour : MonoBehaviour
 
     private IEnumerator TimerWork()
     {
+        // Stops the agent until he finishes the task
+        agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
+        agent.speed = thisAgent.getSpeed();
     }
     #endregion
 

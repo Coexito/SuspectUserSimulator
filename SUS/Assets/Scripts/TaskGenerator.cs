@@ -19,12 +19,12 @@ public class TaskGenerator : MonoBehaviour
     [SerializeField] private int MAX_TASKS_AVAILABLE;     // Máximo de tareas activas que puede haber en el mundo
     private bool generating = false;    // para saber si se está generando una tarea en el momento
 
-
     void Awake()
     {
+        List<GameObject> tasks = new List<GameObject>();
         tasksCoords = new List<Vector3>();
         SetTasksCoords(tasksCoords);
-
+        
     }
 
     private void Start() {
@@ -56,13 +56,11 @@ public class TaskGenerator : MonoBehaviour
 
     private void SetTasksCoords(List<Vector3> tasks)
     {
-        tasks.Add(new Vector3(-22.71f, 10.3f, -14.55f));
-        tasks.Add(new Vector3(12.1f, 10.3f, -21.64f));
-        tasks.Add(new Vector3(39.41f, 10.3f, -4.74f));
-        tasks.Add(new Vector3(53.43f, 10.3f, -11.24f));
-        tasks.Add(new Vector3(29.2f, 10.3f, 14.3f));
-        tasks.Add(new Vector3(18.5f, 10.3f, 3.3f));
-        tasks.Add(new Vector3(-13.6f, 10.3f, 19.7f));
+        //Add to tasks the GameObjects' Coords
+        for (int i = 1; i <= transform.Find("Tasks").transform.childCount; i++)
+        {
+            tasks.Add(transform.Find("Tasks").transform.Find("Task" + i).transform.localPosition);
+        }
     }
 
 }
