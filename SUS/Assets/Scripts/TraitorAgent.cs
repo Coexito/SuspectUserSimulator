@@ -6,8 +6,12 @@ public class TraitorAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
 
-    public TraitorAgent(float _speed) : base(_speed)
+    public TraitorAgent(float _speed) : base (_speed)
     {
+        agentsFoundInKillingRoom = new Dictionary<string, Agent>();
+    }
+
+    private void Awake() {
         agentsFoundInKillingRoom = new Dictionary<string, Agent>();
     }
 }

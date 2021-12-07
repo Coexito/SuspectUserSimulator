@@ -1,7 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
 
 
 public class HonestBehaviour : MonoBehaviour
@@ -27,7 +27,7 @@ public class HonestBehaviour : MonoBehaviour
         thisAgent = new HonestAgent(defaultSpeed);
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
-        agent.speed = this.defaultSpeed;
+        agent.speed = thisAgent.getSpeed();
 
         //Work Behaviour Tree
         workBT = new BehaviourTreeEngine(true);
@@ -39,6 +39,11 @@ public class HonestBehaviour : MonoBehaviour
 
         CreateBT();
         CreateFMS();
+    }
+
+    private void Start() 
+    {
+        SetTextName();
     }
 
     void Update()
@@ -76,7 +81,7 @@ public class HonestBehaviour : MonoBehaviour
         State deadState = generalFSM.CreateState("dead", Die);
 
         // Perceptions
-        Perception born = generalFSM.CreatePerception<TimerPerception>(1f);
+        Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);  // Waits a quarter of a second until they do something
         Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
         Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
         Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
@@ -102,11 +107,16 @@ public class HonestBehaviour : MonoBehaviour
         workBT.SetRootNode(rootNode);
     }
 
+    private void SetTextName()
+    {
+        TextMeshProUGUI nameTXT = transform.FindDeepChild("NameTXT").GetComponent<TextMeshProUGUI>();
+        nameTXT.SetText(thisAgent.getAgentName());
+    }
+
 
     #region FSMActions
     private void Wander()
     {
-        Debug.Log("Entra en wander");
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
         SceneController.instance.IWantATask(this);  // Asks for a task
 
@@ -147,7 +157,7 @@ public class HonestBehaviour : MonoBehaviour
             
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
-        Debug.Log("Juanjo for president");
+        Debug.Log("Voting...");
 
         vote = false;
 
@@ -157,6 +167,18 @@ public class HonestBehaviour : MonoBehaviour
         agent.speed = 0;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
+
+        /*
+            Vote random agent (TO BE CHANGED)
+            _________________________________
+        */
+
+        int r = Random.Range(0, SceneController.instance.agents.Count);
+        SceneController.instance.VoteAgent(thisAgent, SceneController.instance.agents[r].GetComponent<Agent>());
+
+        /*
+           _________________________________
+        */
     }
 
     public void FireVote()
@@ -195,14 +217,12 @@ public class HonestBehaviour : MonoBehaviour
     private void WalkToTask(Vector3 coords)
     {
         // Resets the bools
-        Debug.Log("going...");
         taskFound = false;
         agent.SetDestination(coords);
     }
 
     private void WorkBT()
     {
-        Debug.Log("Entra en WorkBT");
         StartCoroutine(TimerWork());
         SceneController.instance.TaskDone();
     }
@@ -220,29 +240,21 @@ public class HonestBehaviour : MonoBehaviour
     private ReturnValues isInObjective()
     {
         if (vote || killed)
-        {
             return ReturnValues.Failed;
-        }
         else
         {
             // Checks if agent position is task position
             if (Vector3.Distance(this.transform.position, currentTask) < 3)
-            {
                 return ReturnValues.Succeed;
-            }
             else
-            {
                 return ReturnValues.Running;
-            }
         }        
     }
 
     private ReturnValues finishedWorking()
     {
         if (vote || killed)
-        {
             return ReturnValues.Failed;
-        }
         else
         {
             currentTask = Vector3.zero;
