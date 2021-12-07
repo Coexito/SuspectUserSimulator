@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2857467193457669656}
   - component: {fileID: 2857467193457669663}
   - component: {fileID: 5205989738140459368}
+  - component: {fileID: 9221091089357574405}
   m_Layer: 7
   m_Name: Traitor
   m_TagString: Traitor
@@ -127,7 +128,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3861dea6c70b4d74888ad41c957d4831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldController: {fileID: 0}
   cooldown: 10
   defaultSpeed: 5
   currentTask: {x: 0, y: 0, z: 0}
@@ -154,3 +154,15 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &9221091089357574405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2857467193457669657}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f109d88e89f3df54eb1817489f55a0df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

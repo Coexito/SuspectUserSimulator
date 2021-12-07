@@ -79,14 +79,14 @@ public class HonestBehaviour : MonoBehaviour
         // Perceptions
         Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);
         Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
-        Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
+        Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
         Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
 
 
         // Transitions
         generalFSM.CreateTransition("born", initialState, born, defaultState); // When born, enters the default state & starts looking for work
         defaultFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
-        generalFSM.CreateTransition("vote finished", votingState, voteCalled, initialState);
+        generalFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
         defaultFSM.CreateExitTransition("killed", wanderState, youWereKilled, deadState);
 
     }
@@ -150,7 +150,7 @@ public class HonestBehaviour : MonoBehaviour
         */
         Debug.Log("Juanjo for president");
 
-        vote = false;
+        
         SceneController.instance.DeleteAgentsWaitingForTask(this);
 
         // Dismisses his task
@@ -168,7 +168,7 @@ public class HonestBehaviour : MonoBehaviour
 
     public void FireWander()
     {
-        generalFSM.Fire("vote finished");
+        vote = false;
     }
 
     private void Die()

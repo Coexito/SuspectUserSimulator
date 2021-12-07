@@ -72,9 +72,9 @@ public class TraitorBehaviour : MonoBehaviour
         State workState = generalFSM.CreateSubStateMachine("work", killingUS);
 
         TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(cooldown);
-        Perception decisionTaken = generalFSM.CreatePerception<Perception>();
-
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
+
+        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
         killingUS.CreateExitTransition("decision tomada", workState, decisionTaken, wanderState);
 
         //Create supermachine
@@ -87,13 +87,13 @@ public class TraitorBehaviour : MonoBehaviour
         // Perceptions
         Perception born = defaultFSM.CreatePerception<TimerPerception>(0.25f);
         Perception voteCalled = defaultFSM.CreatePerception<ValuePerception>(() => vote == true);
-        Perception voteFinished = defaultFSM.CreatePerception<PushPerception>();
+        Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
 
 
         // Transitions
         defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
         generalFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
-        defaultFSM.CreateTransition("vote finished", votingState, voteCalled, initialState);
+        defaultFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
     }
 
     private void CreateKillingUtilitySystem()
@@ -144,13 +144,13 @@ public class TraitorBehaviour : MonoBehaviour
         Factor killingNeed = new WeightedSumFusion(factors, weights); //Decisive factor
 
         //Actions and decisions
-        killingUS.CreateUtilityAction("sabotear", Sabotage, riskToLose);
-        killingUS.CreateUtilityAction("asesinar", Kill, killingNeed);
+        UtilityAction sabotageUA = killingUS.CreateUtilityAction("sabotear", Sabotage, riskToLose);
+        UtilityAction killUA = killingUS.CreateUtilityAction("asesinar", Kill, killingNeed);
         UtilityAction pretendUA = killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
         
         //Transition
         BehaviourTreeStatusPerception pretendDone = killingUS.CreatePerception<BehaviourTreeStatusPerception>(pretendBT, ReturnValues.Succeed);
-        pretendBT.CreateExitTransition("Exit_Transition", pretendUA.utilityState, pretendDone, killingUS);
+        pretendBT.CreateExitTransition("Exit_Transition", pretendUA.utilityState, pretendDone, killingUS);        
     }
 
     private void CreatePretendBehaviourTree()
@@ -158,7 +158,7 @@ public class TraitorBehaviour : MonoBehaviour
         SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
 
         LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", WalkToTask, isInObjective);
-        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", Work, finishedWorking);
+        LeafNode pretendWork = pretendBT.CreateLeafNode("pretend work", Work, finishedWorking);
 
         rootNode.AddChild(walkToTask);
         rootNode.AddChild(pretendWork);
@@ -194,11 +194,13 @@ public class TraitorBehaviour : MonoBehaviour
     private void Sabotage()
     {        
         Debug.Log("He decidido sabotear");
+        killingUS.Fire("decision tomada");
     }
 
     private void Kill()
     {
         Debug.Log("He decidido matar");
+        killingUS.Fire("decision tomada");
     }
 
     #endregion
@@ -288,8 +290,6 @@ public class TraitorBehaviour : MonoBehaviour
             Se muestra por pantalla el proceso de votación a través de una interfaz
         */
 
-        vote = false;
-
         // Dismisses his task
         currentTask = Vector3.zero;
         agent.speed = 0;
@@ -303,7 +303,7 @@ public class TraitorBehaviour : MonoBehaviour
 
     public void FireWander()
     {
-        generalFSM.Fire("vote finished");
+        vote = false;
     }
 
     #endregion
