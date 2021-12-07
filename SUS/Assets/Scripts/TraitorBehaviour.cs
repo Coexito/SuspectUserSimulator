@@ -65,7 +65,7 @@ public class TraitorBehaviour : MonoBehaviour
     private void CreateKillingUtilitySystem()
     {
         //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(SceneController.instance.GetTasksDone, SceneController.instance.GetTotalTasks(), 0f);
+        Factor tasksCompleted = new LeafVariable(() => SceneController.instance.GetTasksDone(), SceneController.instance.GetTotalTasks(), 0f);
         Factor agentsInLastRoom = new LeafVariable(GetNumberOfAgentsInLastRoom, SceneController.instance.GetTotalHonestAgents(), 0f);
 
         Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
