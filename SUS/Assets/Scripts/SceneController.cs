@@ -22,7 +22,7 @@ public class SceneController : MonoBehaviour
     [HideInInspector] public bool sabotageHappening;
 
     // Data structures
-    public List<Agent> agents;
+    public List<GameObject> agents;
     [SerializeField] private List<HonestBehaviour> agentsWaitingForTask;
     public List<Vector3> availableTasks;
     
@@ -39,22 +39,50 @@ public class SceneController : MonoBehaviour
 
     private void Update() {
         AssignTasks();
+
+
+        if(Input.GetKeyDown(KeyCode.Space))
+            KillAgent(agents[0]);
+        else if(Input.GetKeyDown(KeyCode.V))
+            StartVotation();
+        else if(Input.GetKeyDown(KeyCode.F))
+            FinishVotation();
+
     }
 
     private void SpawnAgents()
     {
         for(int i = 0; i < totalHonestAgents; i++)
         {
-            Instantiate(honestPrefab, new Vector3(-12.1f, 6.9f, 16.7f), Quaternion.identity);
+            agents.Add(Instantiate(honestPrefab, new Vector3(-12.1f, 6.9f, 16.7f), Quaternion.identity));
         }
 
         for (int i = 0; i < totalTraitorAgents; i++)
         {
-            Instantiate(traitorPrefab, new Vector3(-12.1f, 6.9f, 10f), Quaternion.identity);
+            agents.Add(Instantiate(traitorPrefab, new Vector3(-12.1f, 6.9f, 10f), Quaternion.identity));
         }
     }
 
+    private void StartVotation()
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().StartVote();
 
+        agentsWaitingForTask.Clear();
+    }
+
+    private void FinishVotation()
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().FinishVote();
+    }
+
+    private void KillAgent(GameObject ag)
+    {
+        ag.GetComponent<Agent>().Die();
+        agents.Remove(ag);
+        agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
+    }
 
     public void TakeTask(Vector3 task)
     {

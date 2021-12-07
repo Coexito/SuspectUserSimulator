@@ -45,11 +45,6 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM.Update();
         generalFSM.Update();
 
-
-        if(Input.GetKeyDown(KeyCode.Space))
-            defaultFSM.Fire("killed");
-        else if(Input.GetKeyDown(KeyCode.V))
-            defaultFSM.Fire("vote called");
     }
 
     private void CreateFMS()
@@ -83,9 +78,11 @@ public class HonestBehaviour : MonoBehaviour
 
         // Transitions
         generalFSM.CreateTransition("born", initialState, born, defaultState); // When born, enters the default state & starts looking for work
-        defaultFSM.CreateExitTransition("vote called", workState, voteCalled, votingState);
-        generalFSM.CreateTransition("vote finished", votingState, voteCalled, defaultState);
-        defaultFSM.CreateExitTransition("killed", workState, youWereKilled, deadState);
+        defaultFSM.CreateExitTransition("vote called from work", workState, voteCalled, votingState);
+        defaultFSM.CreateExitTransition("vote called from wander", wanderState, voteCalled, votingState);
+        generalFSM.CreateTransition("vote finished", votingState, voteCalled, initialState);
+        defaultFSM.CreateExitTransition("killed from work", workState, youWereKilled, deadState);
+        defaultFSM.CreateExitTransition("killed from wander", wanderState, youWereKilled, deadState);
 
     }
     private void CreateBT()
@@ -105,8 +102,13 @@ public class HonestBehaviour : MonoBehaviour
     #region FSMActions
     private void Wander()
     {
-        agent.SetDestination(GetRandomPoint(transform.position, 20f));
-        SceneController.instance.IWantATask(this);
+        Debug.Log("Entra en wander");
+        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
+        SceneController.instance.IWantATask(this);  // Asks for a task
+
+        agent.speed = thisAgent.getSpeed(); // Sets the default speed
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task
+        
     }
 
     // Get Random Point on a Navmesh surface
@@ -142,8 +144,24 @@ public class HonestBehaviour : MonoBehaviour
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
         Debug.Log("Juanjo for president");
+
+        // Dismisses his task
+        taskFound = false;  
+        currentTask = Vector3.zero;
+
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
+    }
+
+    public void FireVote()
+    {
+        defaultFSM.Fire("vote called from work");
+        defaultFSM.Fire("vote called from wander");
+    }
+
+    public void FireWander()
+    {
+        generalFSM.Fire("vote finished");
     }
 
     private void Die()
@@ -161,18 +179,26 @@ public class HonestBehaviour : MonoBehaviour
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
         //Destroy(this.gameObject);
     }
+
+    public void FireDie()
+    {
+        defaultFSM.Fire("killed from work");
+        defaultFSM.Fire("killed from wander");
+    }
     #endregion
 
     #region BTActions
     private void WalkToTask(Vector3 coords)
     {
         // Resets the bools
+        Debug.Log("going...");
         taskFound = false;
         agent.SetDestination(coords);
     }
 
     private void WorkBT()
     {
+        Debug.Log("Entra en WorkBT");
         StartCoroutine(TimerWork());
         SceneController.instance.TaskDone();
     }
