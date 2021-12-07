@@ -588,7 +588,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &179131380
 GameObject:
@@ -1119,6 +1119,7 @@ GameObject:
   - component: {fileID: 441846038}
   - component: {fileID: 441846037}
   - component: {fileID: 441846036}
+  - component: {fileID: 441846040}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1204,13 +1205,25 @@ RectTransform:
   - {fileID: 858957016}
   - {fileID: 841252819}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &441846040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 441846035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 966b9ff0c4b513e4abb451c1663fbaed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &485027609
 GameObject:
   m_ObjectHideFlags: 0
@@ -1696,7 +1709,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 841252820}
+      - m_Target: {fileID: 441846040}
         m_TargetAssemblyTypeName: ParametersSelector, Assembly-CSharp
         m_MethodName: removeAmountTraitor
         m_Mode: 1
@@ -1755,7 +1768,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 841252819}
-  - component: {fileID: 841252820}
   m_Layer: 5
   m_Name: ParametersSelector
   m_TagString: Untagged
@@ -1788,18 +1800,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0.000014544, y: -53}
   m_SizeDelta: {x: 426.8206, y: 326.9245}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &841252820
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 841252818}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 966b9ff0c4b513e4abb451c1663fbaed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &858957015
 GameObject:
   m_ObjectHideFlags: 0
@@ -1921,7 +1921,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 841252820}
+      - m_Target: {fileID: 441846040}
         m_TargetAssemblyTypeName: ParametersSelector, Assembly-CSharp
         m_MethodName: addAmountTraitor
         m_Mode: 1
@@ -3061,7 +3061,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 841252820}
+      - m_Target: {fileID: 441846040}
         m_TargetAssemblyTypeName: ParametersSelector, Assembly-CSharp
         m_MethodName: removeAmountHonest
         m_Mode: 1
@@ -3696,6 +3696,49 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1530955998}
   m_CullTransparentMesh: 1
+--- !u!1 &1545365777
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1545365779}
+  - component: {fileID: 1545365778}
+  m_Layer: 0
+  m_Name: MainMenuData
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1545365778
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545365777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b2c30935b121104fb482b3bbd452332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1545365779
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1545365777}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 586.531, y: 255.42769, z: -435.037}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1546683990
 GameObject:
   m_ObjectHideFlags: 0
@@ -4180,7 +4223,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 841252820}
+      - m_Target: {fileID: 441846040}
         m_TargetAssemblyTypeName: ParametersSelector, Assembly-CSharp
         m_MethodName: addAmountHonest
         m_Mode: 1
@@ -4287,7 +4330,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 10
+  m_text: 50
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4581,7 +4624,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 841252820}
+      - m_Target: {fileID: 441846040}
         m_TargetAssemblyTypeName: ParametersSelector, Assembly-CSharp
         m_MethodName: addAmountTasks
         m_Mode: 1
@@ -5108,7 +5151,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 841252820}
+      - m_Target: {fileID: 441846040}
         m_TargetAssemblyTypeName: ParametersSelector, Assembly-CSharp
         m_MethodName: removeAmountTasks
         m_Mode: 1

@@ -166,11 +166,9 @@ public class HonestBehaviour : MonoBehaviour
 
     private IEnumerator TimerWork()
     {
-        Debug.Log("Working1");
         agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
         agent.speed=thisAgent.getSpeed();
-        Debug.Log("Working5");
     }
     #endregion
 

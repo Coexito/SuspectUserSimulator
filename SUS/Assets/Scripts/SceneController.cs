@@ -14,7 +14,9 @@ public class SceneController : MonoBehaviour
     [Header("Total agents:")]
     [SerializeField] private float totalHonestAgents = 5f; 
     
-    [SerializeField] private float totalTraitorAgents = 2f; 
+    [SerializeField] private float totalTraitorAgents = 2f;
+
+    [SerializeField] private float totalTasks = 50f;
 
     [HideInInspector] public bool sabotageHappening;
 
@@ -22,15 +24,23 @@ public class SceneController : MonoBehaviour
     public List<Agent> agents;
     [SerializeField] private List<HonestBehaviour> agentsWaitingForTask;
     public List<Vector3> availableTasks;
+    MainMenuData dataMenu;
+
     
     void Awake()
     {
         instance = this;
         availableTasks = new List<Vector3>();
         agentsWaitingForTask = new List<HonestBehaviour>();
+       
+        dataMenu = GameObject.Find("MainMenuData").GetComponent<MainMenuData>();
+        totalHonestAgents = dataMenu.Honests;
+        totalTraitorAgents = dataMenu.Traitors;
+        totalTasks = dataMenu.Tasks;
     }
 
     private void Start() {
+        
         SpawnAgents();
     }
 
