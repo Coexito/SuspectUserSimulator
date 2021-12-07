@@ -76,7 +76,7 @@ public class HonestBehaviour : MonoBehaviour
         State deadState = generalFSM.CreateState("dead", Die);
 
         // Perceptions
-        Perception born = generalFSM.CreatePerception<TimerPerception>(1f);
+        Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);
         Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
         Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
         Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
@@ -111,8 +111,8 @@ public class HonestBehaviour : MonoBehaviour
         SceneController.instance.IWantATask(this);  // Asks for a task
 
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
-        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task
-        
+
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task        
     }
 
     // Get Random Point on a Navmesh surface
@@ -150,6 +150,7 @@ public class HonestBehaviour : MonoBehaviour
         Debug.Log("Juanjo for president");
 
         vote = false;
+        SceneController.instance.DeleteAgentsWaitingForTask(this);
 
         // Dismisses his task
         taskFound = false;  

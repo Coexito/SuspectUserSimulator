@@ -67,8 +67,11 @@ public class SceneController : MonoBehaviour
     {
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().StartVote();
+    }
 
-        agentsWaitingForTask.Clear();
+    public void DeleteAgentsWaitingForTask(HonestBehaviour ag)
+    {
+        agentsWaitingForTask.Remove(ag);
     }
 
     private void FinishVotation()
