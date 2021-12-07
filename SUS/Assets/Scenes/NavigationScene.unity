@@ -166,7 +166,7 @@ MonoBehaviour:
   m_OverrideTileSize: 0
   m_TileSize: 256
   m_OverrideVoxelSize: 0
-  m_VoxelSize: 0.17
+  m_VoxelSize: 0.6033333
   m_BuildHeightMesh: 0
   m_NavMeshData: {fileID: 23800000, guid: a08ad6b8473f0dd48b30c9c4e746aa8a, type: 2}
 --- !u!4 &205406045
@@ -373,7 +373,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11455738, guid: 407bd5cbe8c43334bb1b25c0f3826974, type: 3}
       propertyPath: useKeyboardInput
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11455738, guid: 407bd5cbe8c43334bb1b25c0f3826974, type: 3}
       propertyPath: useMouseRotation
@@ -432,7 +432,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tasksCoords: []
   minSecs: 1
-  maxSecs: 1
+  maxSecs: 5
   MAX_TASKS_AVAILABLE: 0
 --- !u!1001 &1534640709
 PrefabInstance:
