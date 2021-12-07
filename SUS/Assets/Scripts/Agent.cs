@@ -22,7 +22,6 @@ public class Agent : MonoBehaviour
     }
 
     private void Awake() {  }
-
     
     public void setSpeed(float s)
     {
@@ -33,12 +32,12 @@ public class Agent : MonoBehaviour
         return this.speed;
     }
 
-    public void setAgentName(string s) {
-        this.agentName = s;
-    }
-
     public string getAgentName() {
         return this.agentName;
+    }
+
+    public void setAgentName(string s) {
+        this.agentName = s;
     }
     
     public virtual void StartVote() { }

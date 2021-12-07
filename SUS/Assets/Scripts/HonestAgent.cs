@@ -15,6 +15,11 @@ public class HonestAgent : Agent
         agentsFoundInKillingRoom = new Dictionary<string, Agent>();
     }
 
+    private void Start() 
+    {
+        
+    }
+
 
     public override void StartVote()
     {
