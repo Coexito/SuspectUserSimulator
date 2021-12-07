@@ -503,7 +503,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5073568580362084341, guid: 67c0f25d9d5933349bd2221b52251d19, type: 3}
       propertyPath: totalTraitorAgents
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 67c0f25d9d5933349bd2221b52251d19, type: 3}
