@@ -64,14 +64,18 @@ public class SceneController : MonoBehaviour
         for(int i = 0; i < totalHonestAgents; i++)
         {
             GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            h.GetComponent<HonestAgent>().setAgentName("Agent" + i+1);
+            //string name ="Agent" + (i+1);
+            //h.name = name;
+            //h.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(h);
         }
 
         for (int i = 0; i < totalTraitorAgents; i++)
         {
             GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            t.GetComponent<TraitorAgent>().setAgentName("Traitor" + i+1);
+            string name = "Agent" + (i + 1);
+            t.name = name;
+            t.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(t);
         }
     }

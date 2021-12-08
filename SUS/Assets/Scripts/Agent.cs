@@ -4,19 +4,28 @@ using UnityEngine;
 
 public class Agent : MonoBehaviour
 {
-    private float speed; // Speed for the agents
+    public float speed; // Speed for the agents
     public Dictionary<string, Agent> agentsInTheRoom;  // Agents in the current room (where this agent is)
     public Dictionary<string, Agent> agentsInMemory;   // Agents remembered in the last 2 rooms
     public Dictionary<string, Agent> sussyAgents;      // Agents suspected (to vote them later)
-    private string agentName;
+    public string agentName;
+    public Agent()
+    {
+        agentsInTheRoom = new Dictionary<string, Agent>();
+        agentsInMemory = new Dictionary<string, Agent>();
+        sussyAgents = new Dictionary<string, Agent>();
 
+        agentName = "Agent" + Random.Range(0, 10000);
+
+        this.speed = 5f;
+    }
     public Agent(float _speed)
     {  
         agentsInTheRoom = new Dictionary<string, Agent>();
         agentsInMemory = new Dictionary<string, Agent>();
         sussyAgents = new Dictionary<string, Agent>();
 
-        agentName = "Agent" + Random.Range(0, 10000);
+        //agentName = "";
 
         this.speed = _speed;
     }
@@ -46,4 +55,6 @@ public class Agent : MonoBehaviour
     public virtual void FinishVote() { }
 
     public virtual void Die() { }
+
+
 }
