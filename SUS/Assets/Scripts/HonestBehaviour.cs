@@ -233,8 +233,7 @@ public class HonestBehaviour : MonoBehaviour
 
     private void WorkBT()
     {
-        StartCoroutine(TimerWork());
-        SceneController.instance.TaskDone();
+        StartCoroutine(TimerWork());        
     }
 
     private IEnumerator TimerWork()
@@ -273,6 +272,7 @@ public class HonestBehaviour : MonoBehaviour
         {
             if (notWorking)
             {
+                SceneController.instance.TaskDone();
                 currentTask = Vector3.zero;
                 return ReturnValues.Succeed;
             }
