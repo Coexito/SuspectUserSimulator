@@ -263,7 +263,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0bd547ec0713ea4689a1e697cd6c597, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  thisAgent: {fileID: 0}
   defaultSpeed: 5
+  distanceToRandomWalk: 50
   currentTask: {x: 0, y: 0, z: 0}
   timeWorking: 5
 --- !u!195 &2120634168
@@ -312,6 +314,7 @@ GameObject:
   - component: {fileID: 5684122526717597363}
   - component: {fileID: 1252829546499598283}
   - component: {fileID: 7890014496086117555}
+  - component: {fileID: 5857890452870620377}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -326,8 +329,8 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8227453879007103005}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.00000014377}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_Children:
   - {fileID: 7433873598404572196}
@@ -336,7 +339,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -0.0185, y: 1.58}
+  m_AnchoredPosition: {x: 0, y: 1.5}
   m_SizeDelta: {x: 7.2443, y: 1.8604}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &5684122526717597363
@@ -400,3 +403,16 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &5857890452870620377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8227453879007103005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11a5e702c197cab408e5fa3cc86de2eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}

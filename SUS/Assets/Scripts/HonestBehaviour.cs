@@ -12,6 +12,7 @@ public class HonestBehaviour : MonoBehaviour
 
     public Agent thisAgent;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
+    [SerializeField] private float distanceToRandomWalk = 50f;
 
     private NavMeshAgent agent;
     [SerializeField] private Vector3 currentTask = Vector3.zero;
@@ -26,9 +27,9 @@ public class HonestBehaviour : MonoBehaviour
     {
         // Creates the object that represents this agent & has data structures
         thisAgent = GetComponent<Agent>();
+        thisAgent.setSpeed(defaultSpeed);
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
-        thisAgent.setSpeed(defaultSpeed);
         agent.speed = thisAgent.getSpeed();
 
         //Work Behaviour Tree
@@ -125,7 +126,7 @@ public class HonestBehaviour : MonoBehaviour
 
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
 
-        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task        
+        agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task        
     }
 
     // Get Random Point on a Navmesh surface

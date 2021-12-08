@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
 
 public class TraitorBehaviour : MonoBehaviour
 {
@@ -18,15 +19,17 @@ public class TraitorBehaviour : MonoBehaviour
     [SerializeField] private float timeWorking = 5f;
 
     private bool vote = false;
+    [SerializeField] private float distanceToRandomWalk = 50f;
 
     private void Awake()
     {
 
         // Creates the object that represents this agent & has data structures
-        thisAgent = new TraitorAgent(defaultSpeed);
+        thisAgent = GetComponent<TraitorAgent>();
+        thisAgent.setSpeed(defaultSpeed);
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
-        agent.speed = this.defaultSpeed;
+        agent.speed = thisAgent.getSpeed();
 
         generalFSM = new StateMachineEngine(true);
         defaultFSM = new StateMachineEngine();
@@ -40,6 +43,17 @@ public class TraitorBehaviour : MonoBehaviour
     {  
         generalFSM.Update();
         defaultFSM.Update();
+    }
+
+    private void Start() 
+    {
+        SetTextName();
+    }
+
+    private void SetTextName()
+    {
+        TextMeshProUGUI nameTXT = transform.FindDeepChild("NameTXT").GetComponent<TextMeshProUGUI>();
+        nameTXT.SetText(thisAgent.getAgentName());
     }
 
     #region CreateMachines
@@ -154,9 +168,10 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Wander()
     {
+        Debug.Log("Entra en wander");
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
 
-        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task        
+        agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task        
     }
 
     // Get Random Point on a Navmesh surface
@@ -176,8 +191,8 @@ public class TraitorBehaviour : MonoBehaviour
     private void Vote()
     {
         /*
-            Cuando se vota, todos los agentes se paralizan hasta que acabe la votación.
-            Se muestra por pantalla el proceso de votación a través de una interfaz
+            Cuando se vota, todos los agentes se paralizan hasta que acabe la votaciï¿½n.
+            Se muestra por pantalla el proceso de votaciï¿½n a travï¿½s de una interfaz
         */
 
         // Dismisses his task

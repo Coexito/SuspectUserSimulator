@@ -65,7 +65,7 @@ public class SceneController : MonoBehaviour
         for(int i = 0; i < totalHonestAgents; i++)
         {
             GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            string name ="Agent" + (i+1);
+            string name = "Agent" + (i+1);
             h.name = name;
             h.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(h);
@@ -73,10 +73,10 @@ public class SceneController : MonoBehaviour
 
         for (int i = 0; i < totalTraitorAgents; i++)
         {
-            GameObject t = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            string name ="Traitor" + (i+1);
+            GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+            string name = "Traitor" + (i+1);
             t.name = name;
-            t.GetComponent<HonestAgent>().setAgentName(name);
+            t.GetComponent<TraitorAgent>().setAgentName(name);
             agents.Add(t);
         }
     }
@@ -157,7 +157,7 @@ public class SceneController : MonoBehaviour
                 
         }
         
-        Debug.Log("Most voted:" + a.getAgentName());
+        Debug.Log("Most voted: " + a.getAgentName());
         return a;
     }
 
