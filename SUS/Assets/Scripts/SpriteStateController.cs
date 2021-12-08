@@ -7,6 +7,7 @@ public class SpriteStateController : MonoBehaviour
 {
     // Assigned from inspector!!
     [SerializeField] private List<Sprite> stateSprites; // 0-wander, 1-go, 2-work, 3-vote, 4-kill, 5-die
+                                                        // 6-think, 7-alarm, 8-sabotage
     private Image stateIcon;
     
     private void Awake() 
@@ -38,6 +39,15 @@ public class SpriteStateController : MonoBehaviour
                     break;
                 case "die":
                     stateIcon.sprite = stateSprites[5];
+                    break;
+                case "think":
+                    stateIcon.sprite = stateSprites[6];
+                    break;
+                case "alarm":
+                    stateIcon.sprite = stateSprites[7];
+                    break;
+                case "sabotage":
+                    stateIcon.sprite = stateSprites[8];
                     break;
                 
             }

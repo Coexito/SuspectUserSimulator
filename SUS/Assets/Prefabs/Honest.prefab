@@ -378,6 +378,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51bea79c4290bf441aa4219885011cef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  agentsInTheRoomList: []
+  agentsInTheRoomList1: []
+  agentsInTheRoomList2: []
 --- !u!114 &2814411448134018075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -397,6 +400,9 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 9d1eea6ecbf01c74195f78f3bf062722, type: 3}
   - {fileID: 21300000, guid: 50d2a88a252f16a46a051d2dbe38bb1b, type: 3}
   - {fileID: 21300000, guid: 01042f80ef5c6ae40aa32b5344ead5af, type: 3}
+  - {fileID: 21300000, guid: a11d813c103d10a49b971e598a10219a, type: 3}
+  - {fileID: 21300000, guid: 9acf58145b95c7641ba2eecf8bafbe73, type: 3}
+  - {fileID: 21300000, guid: eaeae99bcda0f224e88bd1289d0293cf, type: 3}
 --- !u!1 &8227453879007103005
 GameObject:
   m_ObjectHideFlags: 0
