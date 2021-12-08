@@ -11,6 +11,7 @@ public class TraitorBehaviour : MonoBehaviour
 
     [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 2;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
+    [SerializeField] private float distanceToRandomWalk = 50f;
 
     private TraitorAgent thisAgent;
     private NavMeshAgent agent;
@@ -19,7 +20,9 @@ public class TraitorBehaviour : MonoBehaviour
     [SerializeField] private float timeWorking = 5f;
 
     private bool vote = false;
-    [SerializeField] private float distanceToRandomWalk = 50f;
+    
+    private SpriteStateController spriteStateController; // To change the state sprite
+
 
     private void Awake()
     {
@@ -33,6 +36,8 @@ public class TraitorBehaviour : MonoBehaviour
 
         generalFSM = new StateMachineEngine(true);
         defaultFSM = new StateMachineEngine();
+
+        spriteStateController = GetComponent<SpriteStateController>();
 
         //General FSM
         CreateFSM();        
@@ -81,23 +86,23 @@ public class TraitorBehaviour : MonoBehaviour
         // Perceptions
         Perception born = defaultFSM.CreatePerception<TimerPerception>(0.25f);
         Perception voteCalled = defaultFSM.CreatePerception<ValuePerception>(() => vote == true);
-        Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
+        Perception voteFinished = defaultFSM.CreatePerception<ValuePerception>(() => vote == false);
 
 
         // Transitions
         defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
         generalFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
         defaultFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
-    }    
+    }
 
     #endregion
 
     #region EntryUSDataMethods
 
-    //Returns 1 if there's 2 or more honest agents with the traitor
+    //Returns 1 if there's 0, 2 or more honest agents with the traitor (must not kill). Returns 0 if there's 1 honest agents with the traitor (can kill)
     private float Get2OrMoreAgentsInRoom()
     {
-        return 0f;
+        return 1f;
     }
 
     private float GetNumberOfAgentsInLastRoom()
@@ -117,23 +122,19 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Sabotage()
     {        
-        Debug.Log("He decidido sabotear");
+        spriteStateController.SetStateIcon("sabotage");
         generalFSM.Fire("decision tomada");
     }
 
     private void Kill()
     {
-        Debug.Log("He decidido matar");
+        spriteStateController.SetStateIcon("kill");
         generalFSM.Fire("decision tomada");
     }
 
     private void Pretend()
     {
-        Debug.Log("He decidido fingir");
-        WalkToTask();
-        while (Vector3.Distance(this.transform.position, currentTask) < 3) ;
-        Work();
-        generalFSM.Fire("decision tomada");
+        WalkToTask();  
     }
 
     #endregion
@@ -145,11 +146,26 @@ public class TraitorBehaviour : MonoBehaviour
         int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count - 1));
         currentTask = TaskGenerator.instance.tasksCoords[taskSelected];
         agent.SetDestination(currentTask);
+        spriteStateController.SetStateIcon("go");
+
+        StartCoroutine(IsInObjective());
+    }
+
+    private IEnumerator IsInObjective()
+    {
+        for(;;)
+        {
+            if (Vector3.Distance(this.transform.position, currentTask) < 3)
+            {
+                Work();
+            }
+            yield return new WaitForSeconds(.1f);
+        }
     }
 
     private void Work()
     {
-        Debug.Log("Fingiendo");
+        spriteStateController.SetStateIcon("work");
         StartCoroutine(TimerWork());
     }
 
@@ -160,6 +176,7 @@ public class TraitorBehaviour : MonoBehaviour
         yield return new WaitForSeconds(timeWorking);
         agent.speed = thisAgent.getSpeed();
         currentTask = Vector3.zero;
+        generalFSM.Fire("decision tomada");
     }
 
     #endregion    
@@ -168,10 +185,11 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Wander()
     {
-        Debug.Log("Entra en wander");
+        spriteStateController.SetStateIcon("think");
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
 
-        agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task        
+        agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task     
+          
     }
 
     // Get Random Point on a Navmesh surface
@@ -199,6 +217,7 @@ public class TraitorBehaviour : MonoBehaviour
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
+        spriteStateController.SetStateIcon("vote");
     }
 
     public void FireVote()
