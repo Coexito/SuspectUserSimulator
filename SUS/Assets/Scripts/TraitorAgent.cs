@@ -6,7 +6,7 @@ public class TraitorAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
 
-    public TraitorAgent(float _speed) : base ()
+    public TraitorAgent() : base ()
     {
         agentsFoundInKillingRoom = new Dictionary<string, Agent>();
     }
