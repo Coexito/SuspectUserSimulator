@@ -23,6 +23,8 @@ public class HonestBehaviour : MonoBehaviour
 
     [SerializeField] private float timeWorking = 5f;
 
+    private SpriteStateController spriteStateController; // To change the state sprite
+
     void Awake()
     {
         // Creates the object that represents this agent & has data structures
@@ -39,6 +41,8 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM = new StateMachineEngine(BehaviourEngine.IsASubmachine);
         //General FSM
         generalFSM = new StateMachineEngine(BehaviourEngine.IsNotASubmachine);
+
+        spriteStateController = GetComponent<SpriteStateController>();
 
         CreateBT();
         CreateFMS();
@@ -121,6 +125,8 @@ public class HonestBehaviour : MonoBehaviour
     private void Wander()
     {
         notWorking = true;
+        spriteStateController.SetStateIcon("wander");   // the state without caps!!
+
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
         SceneController.instance.IWantATask(this);  // Asks for a task
 
@@ -163,7 +169,7 @@ public class HonestBehaviour : MonoBehaviour
         */
         Debug.Log("Voting...");
 
-        
+        spriteStateController.SetStateIcon("vote");
         SceneController.instance.DeleteAgentsWaitingForTask(this);
 
         // Dismisses his task
@@ -211,6 +217,7 @@ public class HonestBehaviour : MonoBehaviour
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
         Debug.Log("Im dead :(");
+        spriteStateController.SetStateIcon("die");
         this.GetComponentInParent<CapsuleCollider>().enabled = false;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
@@ -228,11 +235,13 @@ public class HonestBehaviour : MonoBehaviour
     {
         // Resets the bools
         taskFound = false;
+        spriteStateController.SetStateIcon("go");
         agent.SetDestination(coords);
     }
 
     private void WorkBT()
     {
+        spriteStateController.SetStateIcon("work");
         StartCoroutine(TimerWork());        
     }
 

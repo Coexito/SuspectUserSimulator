@@ -65,8 +65,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c12634a1a2164f74f883a3c2d98f9192, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -91,6 +91,7 @@ GameObject:
   - component: {fileID: 2857467193457669663}
   - component: {fileID: 5205989738140459368}
   - component: {fileID: 9221091089357574405}
+  - component: {fileID: 2011263771194024988}
   m_Layer: 7
   m_Name: Traitor
   m_TagString: Traitor
@@ -243,6 +244,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f109d88e89f3df54eb1817489f55a0df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2011263771194024988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2857467193457669657}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95221a1da9c814843bfee778eb099950, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stateSprites:
+  - {fileID: 21300000, guid: c0b2dbfd3d7573942954baebd4684aec, type: 3}
+  - {fileID: 21300000, guid: c12634a1a2164f74f883a3c2d98f9192, type: 3}
+  - {fileID: 21300000, guid: 519b712ce18959a468b5ded8c5c74036, type: 3}
+  - {fileID: 21300000, guid: 9d1eea6ecbf01c74195f78f3bf062722, type: 3}
+  - {fileID: 21300000, guid: 50d2a88a252f16a46a051d2dbe38bb1b, type: 3}
+  - {fileID: 21300000, guid: 01042f80ef5c6ae40aa32b5344ead5af, type: 3}
 --- !u!1 &5553394553099530549
 GameObject:
   m_ObjectHideFlags: 0
