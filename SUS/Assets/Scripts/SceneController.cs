@@ -3,29 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class SceneController : MonoBehaviour
 {
+    // Variables to start the simulation
     public static SceneController instance;
-
     [SerializeField] private GameObject honestPrefab;
     [SerializeField] private GameObject traitorPrefab;
 
     // World variables
-    [SerializeField] [Header("Total tasks needed to win:")] private float TOTAL_TASKS = 20f; //Number of tasks needed to be done by honest agents
+    [SerializeField] [Header("Total tasks needed to win:")] private float TOTAL_TASKS = 10f; //Number of tasks needed to be done by honest agents
 
     [Header("Total agents:")]
     [SerializeField] private float totalHonestAgents = 5f; 
     
     [SerializeField] private float totalTraitorAgents = 2f;
 
-    private int tasksDone = 0;
+    [SerializeField] private int tasksDone = 0;
 
     [HideInInspector] public bool sabotageHappening;
-    
-    private TextMeshProUGUI voteLogs;
-    [SerializeField] private GameObject canvas;
-    
+    private bool gameWasSabotaged = false;    
 
     // Data structures
     public List<GameObject> agents;
@@ -34,33 +32,125 @@ public class SceneController : MonoBehaviour
     [SerializeField] private List<Agent> votesForAgents;
 
     public Vector3 EMERGENCY_POINT;
+
+    // UI variables
+    [SerializeField] private GameObject canvas;
+    [SerializeField] private GameObject votePanel;
+    private TextMeshProUGUI voteLogs;
+
+    [SerializeField] private GameObject gameFinishPanel;
+    private TextMeshProUGUI resultsLogs;
+
+    private TextMeshProUGUI honestHUDNumber, traitorHUDNumber, tasksHUDNumber;
     
     void Awake()
     {
         instance = this;
         availableTasks = new List<Vector3>();
         agentsWaitingForTask = new List<HonestBehaviour>();
-        voteLogs = GameObject.Find("VoteLog").GetComponent<TextMeshProUGUI>();
         votesForAgents = new List<Agent>();
-        canvas = GameObject.Find("Canvas");
+
+        // Gets the UI elements
+        canvas.SetActive(true);
+        votePanel = canvas.transform.FindDeepChild("VotePanel").gameObject;
+        voteLogs = votePanel.transform.FindDeepChild("VoteLog").GetComponent<TextMeshProUGUI>();
+
+        gameFinishPanel = canvas.transform.FindDeepChild("GameFinishesPanel").gameObject;
+        resultsLogs = gameFinishPanel.transform.FindDeepChild("ResultsLog").GetComponent<TextMeshProUGUI>();
+
+        honestHUDNumber = canvas.transform.FindDeepChild("HonestNumberTXT").GetComponent<TextMeshProUGUI>();
+        traitorHUDNumber = canvas.transform.FindDeepChild("TraitorNumberTXT").GetComponent<TextMeshProUGUI>();
+        tasksHUDNumber = canvas.transform.FindDeepChild("TasksNumberTXT").GetComponent<TextMeshProUGUI>();
+
+
     }
 
-    private void Start() {
+    private void Start() 
+    {
         SpawnAgents();
-        canvas.SetActive(false);
+        votePanel.SetActive(false);
+        gameFinishPanel.SetActive(false);
     }
 
-    private void Update() {
-        AssignTasks();
+    private void Update() 
+    {
+        UpdateHUD(); // Updates the HUD with current values
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        AssignTasks();  // Assigns tasks to the agents waiting for it
+
+        CheckGameStatus(); // Checks if the simulation has to end or continue
+
+        // -------- PARA PRUEBAS, BORRAR LUEGO ------------
+        if(Input.GetKeyDown(KeyCode.Space))
             KillAgent(agents[0]);
         else if (Input.GetKeyDown(KeyCode.V))
             StartCoroutine(StartVotation());
         else if (Input.GetKeyDown(KeyCode.F))
             FinishVotation();
+        else if(Input.GetKeyDown(KeyCode.P))
+            EndSimulation("All tasks done.\n\nHonest workers win.");
+        //--------------------------------------------------
+
     }
 
+    #region Game management
+
+    private void CheckGameStatus()
+    {
+        if(tasksDone >= TOTAL_TASKS) // All needed tasks are done
+        {
+            // Honest agents win, simulation finishes
+            EndSimulation("All tasks done.\n\nHonest workers win.");
+        }
+        else if(totalTraitorAgents == 0) // All traitors are ejected
+        {
+            // Honest agents win, simulation finishes
+            EndSimulation("All traitors ejected.\n\nHonest workers win.");
+        }
+        else if(totalTraitorAgents >= totalHonestAgents) // Traitors outnumber honests
+        {
+            // Traitor agents win, simulation finishes
+            EndSimulation("There aren't enough honest workers.\n\nTraitors win.");
+        }
+        else if(gameWasSabotaged) // Game succesfully sabotaged
+        {
+            // Traitor agents win, simulation finishes
+            EndSimulation("The sabotage succeeded.\n\nTraitors win.");
+        }
+
+    }
+
+    private void EndSimulation(string finalMessage)
+    {
+        votePanel.SetActive(false);
+        resultsLogs.SetText(finalMessage);
+        gameFinishPanel.SetActive(true);
+
+        Time.timeScale = 0;
+    }
+
+    public void ResetSimulation()
+    {
+        Time.timeScale = 1;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void ExitSimulation()
+    {
+        Time.timeScale = 1;
+        SceneManager.LoadScene("MainMenu");
+    }
+
+    private void UpdateHUD()
+    {
+        honestHUDNumber.SetText(totalHonestAgents.ToString());
+        tasksHUDNumber.SetText(tasksDone.ToString());
+        traitorHUDNumber.SetText(totalTraitorAgents.ToString());
+    }
+
+    #endregion
+
+    #region Agents
     private void SpawnAgents()
     {
         for(int i = 0; i < totalHonestAgents; i++)
@@ -87,6 +177,19 @@ public class SceneController : MonoBehaviour
         agents.Add(a);
     }
 
+    private void KillAgent(GameObject ag)
+    {
+        voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
+        ag.GetComponent<Agent>().Die();
+        agents.Remove(ag);
+
+        if(ag.GetComponent<Agent>() is HonestAgent)
+        {
+            agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
+            totalHonestAgents--;
+        }
+    }
+
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
         // Get Random Point inside Sphere which position is center, radius is maxDistance
         Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
@@ -99,16 +202,18 @@ public class SceneController : MonoBehaviour
         return hit.position;
     }
 
+    #endregion
+
     #region Voting functions
     public IEnumerator StartVotation()
     {
-        voteLogs.SetText("Votes:\n\n");
-        canvas.SetActive(true);  // Opens the canvas
+        voteLogs.SetText("");
+        votePanel.SetActive(true);  // Opens the canvas
 
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().StartVote();
             
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
 
         // - Votation process -
         // Checks the most voted
@@ -158,7 +263,6 @@ public class SceneController : MonoBehaviour
                 
         }
         
-        Debug.Log("Most voted: " + a.getAgentName());
         return a;
     }
 
@@ -169,7 +273,15 @@ public class SceneController : MonoBehaviour
             agents.Remove(ag.gameObject);
 
             if(ag is HonestAgent)
+            {
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
+                totalHonestAgents--;
+            }
+            else if(ag is TraitorAgent)
+            {
+                totalTraitorAgents--;
+            }
+                
 
             Destroy(ag.gameObject);
         }
@@ -178,28 +290,15 @@ public class SceneController : MonoBehaviour
 
     public void FinishVotation()
     {
-        
-
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().FinishVote();
 
-        canvas.SetActive(false);
+
+        votePanel.SetActive(false);
         votesForAgents.Clear();
     }
 
     #endregion
-
-    private void KillAgent(GameObject ag)
-    {
-        voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
-        ag.GetComponent<Agent>().Die();
-        agents.Remove(ag);
-
-        if(ag.GetComponent<Agent>() is HonestAgent)
-        {
-            agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
-        }
-    }
 
     #region Tasks functions
     public void TakeTask(Vector3 task)
