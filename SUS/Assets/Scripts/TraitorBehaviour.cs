@@ -81,23 +81,23 @@ public class TraitorBehaviour : MonoBehaviour
         // Perceptions
         Perception born = defaultFSM.CreatePerception<TimerPerception>(0.25f);
         Perception voteCalled = defaultFSM.CreatePerception<ValuePerception>(() => vote == true);
-        Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
+        Perception voteFinished = defaultFSM.CreatePerception<ValuePerception>(() => vote == false);
 
 
         // Transitions
         defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
         generalFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
         defaultFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
-    }    
+    }
 
     #endregion
 
     #region EntryUSDataMethods
 
-    //Returns 1 if there's 2 or more honest agents with the traitor
+    //Returns 1 if there's 0, 2 or more honest agents with the traitor (must not kill). Returns 0 if there's 1 honest agents with the traitor (can kill)
     private float Get2OrMoreAgentsInRoom()
     {
-        return 0f;
+        return 1f;
     }
 
     private float GetNumberOfAgentsInLastRoom()
@@ -130,10 +130,7 @@ public class TraitorBehaviour : MonoBehaviour
     private void Pretend()
     {
         Debug.Log("He decidido fingir");
-        WalkToTask();
-        while (Vector3.Distance(this.transform.position, currentTask) < 3) ;
-        Work();
-        generalFSM.Fire("decision tomada");
+        WalkToTask();  
     }
 
     #endregion
@@ -145,11 +142,23 @@ public class TraitorBehaviour : MonoBehaviour
         int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count - 1));
         currentTask = TaskGenerator.instance.tasksCoords[taskSelected];
         agent.SetDestination(currentTask);
+        StartCoroutine(IsInObjective());
+    }
+
+    private IEnumerator IsInObjective()
+    {
+        for(;;)
+        {
+            if (Vector3.Distance(this.transform.position, currentTask) < 3)
+            {
+                Work();
+            }
+            yield return new WaitForSeconds(.1f);
+        }
     }
 
     private void Work()
     {
-        Debug.Log("Fingiendo");
         StartCoroutine(TimerWork());
     }
 
@@ -160,6 +169,7 @@ public class TraitorBehaviour : MonoBehaviour
         yield return new WaitForSeconds(timeWorking);
         agent.speed = thisAgent.getSpeed();
         currentTask = Vector3.zero;
+        generalFSM.Fire("decision tomada");
     }
 
     #endregion    
@@ -168,7 +178,6 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Wander()
     {
-        Debug.Log("Entra en wander");
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
 
         agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task        
