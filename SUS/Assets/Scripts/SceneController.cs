@@ -31,6 +31,8 @@ public class SceneController : MonoBehaviour
     public List<Vector3> availableTasks;
     [SerializeField] private List<Agent> votesForAgents;
 
+    public Vector3 EMERGENCY_POINT;
+
     // UI variables
     [SerializeField] private GameObject canvas;
     [SerializeField] private GameObject votePanel;
@@ -40,7 +42,6 @@ public class SceneController : MonoBehaviour
     private TextMeshProUGUI resultsLogs;
 
     private TextMeshProUGUI honestHUDNumber, traitorHUDNumber, tasksHUDNumber;
-
     
     void Awake()
     {
@@ -82,9 +83,9 @@ public class SceneController : MonoBehaviour
         // -------- PARA PRUEBAS, BORRAR LUEGO ------------
         if(Input.GetKeyDown(KeyCode.Space))
             KillAgent(agents[0]);
-        else if(Input.GetKeyDown(KeyCode.V))
+        else if (Input.GetKeyDown(KeyCode.V))
             StartCoroutine(StartVotation());
-        else if(Input.GetKeyDown(KeyCode.F))
+        else if (Input.GetKeyDown(KeyCode.F))
             FinishVotation();
         else if(Input.GetKeyDown(KeyCode.P))
             EndSimulation("All tasks done.\n\nHonest workers win.");
@@ -204,7 +205,7 @@ public class SceneController : MonoBehaviour
     #endregion
 
     #region Voting functions
-    private IEnumerator StartVotation()
+    public IEnumerator StartVotation()
     {
         voteLogs.SetText("");
         votePanel.SetActive(true);  // Opens the canvas

@@ -27,11 +27,11 @@ public class TaskGenerator : MonoBehaviour
         List<GameObject> tasks = new List<GameObject>();
         tasksCoords = new List<Vector3>();
         SetTasksCoords(tasksCoords);
-        
     }
 
     private void Start() {
-        MAX_TASKS_AVAILABLE = Mathf.RoundToInt(SceneController.instance.GetTotalHonestAgents() / 2); 
+        MAX_TASKS_AVAILABLE = Mathf.RoundToInt(SceneController.instance.GetTotalHonestAgents() / 2) + 1;
+        SceneController.instance.EMERGENCY_POINT = transform.Find("EmergencyPoint").transform.position;
     }
 
     void Update()

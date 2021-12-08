@@ -20,6 +20,7 @@ public class HonestBehaviour : MonoBehaviour
     private bool vote = false;
     private bool killed = false;
     private bool notWorking = true;
+    private bool emergency = false;
 
     [SerializeField] private float timeWorking = 5f;
 
@@ -73,12 +74,14 @@ public class HonestBehaviour : MonoBehaviour
         BehaviourTreeStatusPerception taskDone = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Succeed);
         BehaviourTreeStatusPerception votationCalled = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Failed);
         BehaviourTreeStatusPerception killedWorking = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Failed);
+        BehaviourTreeStatusPerception deadAgentFoundWk = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Failed);
 
         // Transitions
         defaultFSM.CreateTransition("task found", wanderState, task, workState);
         workBT.CreateExitTransition("BT done", workState, taskDone, wanderState);
         workBT.CreateExitTransition("votation called", workState, votationCalled, wanderState);
         workBT.CreateExitTransition("killed working", workState, killedWorking, wanderState);
+        workBT.CreateExitTransition("dead agent working", workState, deadAgentFoundWk, wanderState);
 
 
         // States
@@ -86,19 +89,23 @@ public class HonestBehaviour : MonoBehaviour
         State defaultState = generalFSM.CreateSubStateMachine("default", defaultFSM);
         State votingState = generalFSM.CreateState("vote", Vote);
         State deadState = generalFSM.CreateState("dead", Die);
+        State emergencyState = generalFSM.CreateState("emergency", Emergency);
 
         // Perceptions
         Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);  // Waits a quarter of a second until they do something
         Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
         Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
         Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
+        Perception deadAgentFound = generalFSM.CreatePerception<ValuePerception>(() => emergency == true);
 
 
         // Transitions
         generalFSM.CreateTransition("born", initialState, born, defaultState); // When born, enters the default state & starts looking for work
         defaultFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
+        generalFSM.CreateTransition("i called votation", emergencyState, voteCalled, votingState);
         generalFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
         defaultFSM.CreateExitTransition("killed", wanderState, youWereKilled, deadState);
+        defaultFSM.CreateExitTransition("dead agent", wanderState, deadAgentFound, emergencyState);
 
     }
     private void CreateBT()
@@ -228,6 +235,30 @@ public class HonestBehaviour : MonoBehaviour
     {
         killed = true;
     }
+
+    private void Emergency()
+    {
+        spriteStateController.SetStateIcon("alarm");
+        taskFound = false;
+        currentTask = Vector3.zero;
+        agent.SetDestination(SceneController.instance.EMERGENCY_POINT);
+        StartCoroutine(IsInEmergencyPoint());
+    }
+
+    private IEnumerator IsInEmergencyPoint()
+    {
+        for (; ; )
+        {
+            if (Vector3.Distance(this.transform.position, SceneController.instance.EMERGENCY_POINT) < 3)
+            {
+                emergency = false;
+                StartCoroutine(SceneController.instance.StartVotation());
+                break;
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+    }
+
     #endregion
 
     #region BTActions
@@ -258,7 +289,7 @@ public class HonestBehaviour : MonoBehaviour
     #region BTEvaluationFunctions
     private ReturnValues isInObjective()
     {
-        if (vote || killed)
+        if (vote || killed || emergency)
             return ReturnValues.Failed;
         else
         {
@@ -275,7 +306,7 @@ public class HonestBehaviour : MonoBehaviour
 
     private ReturnValues finishedWorking()
     {
-        if (vote || killed)
+        if (vote || killed || emergency)
             return ReturnValues.Failed;
         else
         {

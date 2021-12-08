@@ -23,18 +23,9 @@ public class Agent : MonoBehaviour
         agentsInTheRoomList = new List<string>();
         agentsInTheRoomList2 = new List<string>();
         agentsInTheRoomList1 = new List<string>();
-        // agentName = "Agent" + Random.Range(0, 10000);
-
-        //this.speed = 5f;
     }
+        
 
-
-    private void Awake() {  }
-
-    public void Update() {
-
-    }
-    
     public void getList()
     {
         foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
