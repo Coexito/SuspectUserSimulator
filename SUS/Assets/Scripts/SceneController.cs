@@ -106,9 +106,7 @@ public class SceneController : MonoBehaviour
 
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().StartVote();
-
-        agentsWaitingForTask.Clear();
-
+            
         yield return new WaitForSeconds(1f);
 
         // - Votation process -
@@ -121,6 +119,11 @@ public class SceneController : MonoBehaviour
 
         // Now the user has to finish the votation by pressing the button...
         // (executes FinishVotation)
+    }
+
+    public void DeleteAgentsWaitingForTask(HonestBehaviour ag)
+    {
+        agentsWaitingForTask.Remove(ag);
     }
 
     public void VoteAgent(Agent ag, Agent agVoted)

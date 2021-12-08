@@ -18,6 +18,7 @@ public class HonestBehaviour : MonoBehaviour
     private bool taskFound = false;
     private bool vote = false;
     private bool killed = false;
+    private bool notWorking = true;
 
     [SerializeField] private float timeWorking = 5f;
 
@@ -84,14 +85,14 @@ public class HonestBehaviour : MonoBehaviour
         // Perceptions
         Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);  // Waits a quarter of a second until they do something
         Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
-        Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
+        Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
         Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
 
 
         // Transitions
         generalFSM.CreateTransition("born", initialState, born, defaultState); // When born, enters the default state & starts looking for work
         defaultFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
-        generalFSM.CreateTransition("vote finished", votingState, voteCalled, initialState);
+        generalFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
         defaultFSM.CreateExitTransition("killed", wanderState, youWereKilled, deadState);
 
     }
@@ -118,12 +119,13 @@ public class HonestBehaviour : MonoBehaviour
     #region FSMActions
     private void Wander()
     {
+        notWorking = true;
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
         SceneController.instance.IWantATask(this);  // Asks for a task
 
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
-        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task
-        
+
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task        
     }
 
     // Get Random Point on a Navmesh surface
@@ -160,7 +162,8 @@ public class HonestBehaviour : MonoBehaviour
         */
         Debug.Log("Voting...");
 
-        vote = false;
+        
+        SceneController.instance.DeleteAgentsWaitingForTask(this);
 
         // Dismisses his task
         taskFound = false;  
@@ -194,7 +197,7 @@ public class HonestBehaviour : MonoBehaviour
 
     public void FireWander()
     {
-        generalFSM.Fire("vote finished");
+        vote = false;
     }
 
     private void Die()
@@ -235,9 +238,10 @@ public class HonestBehaviour : MonoBehaviour
 
     private IEnumerator TimerWork()
     {
-        // Stops the agent until he finishes the task
+        // Stops the agent until he finishes the task        
         agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
+        notWorking = true;
         agent.speed = thisAgent.getSpeed();
     }
     #endregion
@@ -251,7 +255,10 @@ public class HonestBehaviour : MonoBehaviour
         {
             // Checks if agent position is task position
             if (Vector3.Distance(this.transform.position, currentTask) < 3)
+            {
+                notWorking = false;
                 return ReturnValues.Succeed;
+            }
             else
                 return ReturnValues.Running;
         }        
@@ -263,8 +270,13 @@ public class HonestBehaviour : MonoBehaviour
             return ReturnValues.Failed;
         else
         {
-            currentTask = Vector3.zero;
-            return ReturnValues.Succeed;
+            if (notWorking)
+            {
+                currentTask = Vector3.zero;
+                return ReturnValues.Succeed;
+            }
+            else
+                return ReturnValues.Running;
         }
     }
     #endregion

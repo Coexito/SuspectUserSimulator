@@ -5,24 +5,22 @@ using UnityEngine.AI;
 
 public class TraitorBehaviour : MonoBehaviour
 {
+    private StateMachineEngine defaultFSM;
     private StateMachineEngine generalFSM;
-    private UtilitySystemEngine killingUS;
-    private BehaviourTreeEngine pretendBT;
 
     [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 2;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     private TraitorAgent thisAgent;
     private NavMeshAgent agent;
-    [SerializeField] private Vector3 currentTask = new Vector3(-13.6f, 10.3f, 19.7f);
+    [SerializeField] private Vector3 currentTask = Vector3.zero;
 
     [SerializeField] private float timeWorking = 5f;
 
-    private float totalTasksDone;
+    private bool vote = false;
 
     private void Awake()
     {
-        totalTasksDone = 0f;
 
         // Creates the object that represents this agent & has data structures
         thisAgent = new TraitorAgent(defaultSpeed);
@@ -30,116 +28,53 @@ public class TraitorBehaviour : MonoBehaviour
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
         agent.speed = this.defaultSpeed;
 
-        pretendBT = new BehaviourTreeEngine(true);
-        killingUS = new UtilitySystemEngine(true);
-        generalFSM = new StateMachineEngine();
-
-        //Pretend Behaviour Tree
-        CreatePretendBehaviourTree();        
-
-        //Killing Utility System
-        CreateKillingUtilitySystem();        
+        generalFSM = new StateMachineEngine(true);
+        defaultFSM = new StateMachineEngine();
 
         //General FSM
-        CreateGeneralFSM();        
+        CreateFSM();        
     }
 
     // Update is called once per frame
     void Update()
     {  
-        pretendBT.Update();
-        killingUS.Update();
         generalFSM.Update();
-    }
-
-    void FixedUpdate()
-    {
-        totalTasksDone = SceneController.instance.GetTasksDone();
+        defaultFSM.Update();
     }
 
     #region CreateMachines
 
-    private void CreateGeneralFSM()
-    {        
+    private void CreateFSM()
+    {
+        //Create submachine
+
         State wanderState = generalFSM.CreateEntryState("wander", Wander);
-        State workState = generalFSM.CreateSubStateMachine("work", killingUS);
+        State workState = generalFSM.CreateState("work", TakeDecision);
 
         TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(cooldown);
-        Perception decisionTaken = generalFSM.CreatePerception<Perception>();
-
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
-        killingUS.CreateExitTransition("decision tomada", workState, decisionTaken, wanderState);
-    }
 
-    private void CreateKillingUtilitySystem()
-    {
-        //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(() => totalTasksDone, SceneController.instance.GetTotalTasks(), 0f);
-        Factor agentsInLastRoom = new LeafVariable(GetNumberOfAgentsInLastRoom, SceneController.instance.GetTotalHonestAgents(), 0f);
+        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
+        generalFSM.CreateTransition("decision tomada", workState, decisionTaken, wanderState);
 
-        Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
-        Factor needToPretend = new LeafVariable(Get2OrMoreAgentsInRoom, 1f, 0f); //Decisive factor
-        Factor fear2 = new LeafVariable(GetAgentLeft, 1f, 0f);
+        //Create supermachine
 
-        //Graph factors
-        Factor fear1 = new LinearCurve(agentsInLastRoom, -1, 1);
+        // States
+        State initialState = defaultFSM.CreateEntryState("idle");
+        State generalState = defaultFSM.CreateSubStateMachine("default", generalFSM);
+        State votingState = defaultFSM.CreateState("vote", Vote);
 
-        List<Point2D> points = new List<Point2D>();
-        points.Add(new Point2D(0, 0));
-        points.Add(new Point2D(0.15f, 0));
-        points.Add(new Point2D(0.4f, 0.25f));
-        points.Add(new Point2D(0.5f, 0.5f));
-        points.Add(new Point2D(0.6f, 0.75f));
-        points.Add(new Point2D(0.85f, 1));
-        points.Add(new Point2D(1, 1));
+        // Perceptions
+        Perception born = defaultFSM.CreatePerception<TimerPerception>(0.25f);
+        Perception voteCalled = defaultFSM.CreatePerception<ValuePerception>(() => vote == true);
+        Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
 
-        Factor riskToLose = new LinearPartsCurve(tasksCompleted, points); //Decisive factor
 
-        //Fusion factors
-        List<Factor> factors = new List<Factor>();
-        factors.Add(fear1);
-        factors.Add(fear2);
-
-        List<float> weights = new List<float>();
-        weights.Add(0.5f);
-        weights.Add(0.5f);
-
-        Factor fearToBeDiscovered = new WeightedSumFusion(factors, weights);
-
-        factors.Clear();
-        factors.Add(riskToLose);
-        factors.Add(fearToBeDiscovered);
-        factors.Add(killingPossibility);
-
-        weights.Clear();
-        weights.Add(0.2f);
-        weights.Add(0.3f);
-        weights.Add(0.5f);
-
-        Factor killingNeed = new WeightedSumFusion(factors, weights); //Decisive factor
-
-        //Actions and decisions
-        killingUS.CreateUtilityAction("sabotear", Sabotage, riskToLose);
-        killingUS.CreateUtilityAction("asesinar", Kill, killingNeed);
-        UtilityAction pretendUA = killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
-        
-        //Transition
-        BehaviourTreeStatusPerception pretendDone = killingUS.CreatePerception<BehaviourTreeStatusPerception>(pretendBT, ReturnValues.Succeed);
-        pretendBT.CreateExitTransition("Exit_Transition", pretendUA.utilityState, pretendDone, killingUS);
-    }
-
-    private void CreatePretendBehaviourTree()
-    { 
-        SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
-
-        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", WalkToTask, isInObjective);
-        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", Work, finishedWorking);
-
-        rootNode.AddChild(walkToTask);
-        rootNode.AddChild(pretendWork);
-
-        pretendBT.SetRootNode(rootNode);        
-    }
+        // Transitions
+        defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
+        generalFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
+        defaultFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
+    }    
 
     #endregion
 
@@ -167,13 +102,24 @@ public class TraitorBehaviour : MonoBehaviour
     #region UtilityActionsMethods
 
     private void Sabotage()
-    {
+    {        
         Debug.Log("He decidido sabotear");
+        generalFSM.Fire("decision tomada");
     }
 
     private void Kill()
     {
         Debug.Log("He decidido matar");
+        generalFSM.Fire("decision tomada");
+    }
+
+    private void Pretend()
+    {
+        Debug.Log("He decidido fingir");
+        WalkToTask();
+        while (Vector3.Distance(this.transform.position, currentTask) < 3) ;
+        Work();
+        generalFSM.Fire("decision tomada");
     }
 
     #endregion
@@ -182,6 +128,8 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void WalkToTask()
     {
+        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count - 1));
+        currentTask = TaskGenerator.instance.tasksCoords[taskSelected];
         agent.SetDestination(currentTask);
     }
 
@@ -193,37 +141,158 @@ public class TraitorBehaviour : MonoBehaviour
 
     private IEnumerator TimerWork()
     {
+        // Stops the agent until he finishes the task        
+        agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);
+        agent.speed = thisAgent.getSpeed();
+        currentTask = Vector3.zero;
     }
 
-    #endregion
-
-    #region BTEvaluationFunctions
-    private ReturnValues isInObjective()
-    {
-        // Checks if agent position is task position
-        if (Vector3.Distance(this.transform.position, currentTask) < 3)
-        {
-            return ReturnValues.Succeed;
-        }
-        else
-        {
-            return ReturnValues.Running;
-        }
-    }
-
-    private ReturnValues finishedWorking()
-    {
-        return ReturnValues.Succeed;
-    }
-    #endregion
+    #endregion    
 
     #region FSMActions
 
     private void Wander()
     {
-        Debug.Log("Estado Wander");
+        agent.speed = thisAgent.getSpeed(); // Sets the default speed
+
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task        
+    }
+
+    // Get Random Point on a Navmesh surface
+    private Vector3 GetRandomPoint(Vector3 center, float maxDistance)
+    {
+        // Get Random Point inside Sphere which position is center, radius is maxDistance
+        Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
+
+        NavMeshHit hit; // NavMesh Sampling Info Container
+
+        // from randomPos find a nearest point on NavMesh surface in range of maxDistance
+        NavMesh.SamplePosition(randomPos, out hit, maxDistance, NavMesh.AllAreas);
+
+        return hit.position;
+    }
+
+    private void Vote()
+    {
+        /*
+            Cuando se vota, todos los agentes se paralizan hasta que acabe la votación.
+            Se muestra por pantalla el proceso de votación a través de una interfaz
+        */
+
+        // Dismisses his task
+        currentTask = Vector3.zero;
+        agent.speed = 0;
+        agent.SetDestination(transform.position);
+    }
+
+    public void FireVote()
+    {
+        vote = true;
+    }
+
+    public void FireWander()
+    {
+        vote = false;
     }
 
     #endregion
+
+    private void TakeDecision()
+    {
+        //Base factors (data received from the world)
+        float tasksCompleted = SceneController.instance.GetTasksDone() / SceneController.instance.GetTotalTasks();
+        float agentsInLastRoom = GetNumberOfAgentsInLastRoom() / SceneController.instance.GetTotalHonestAgents();
+
+        float killingPossibility = Mathf.Abs(Get2OrMoreAgentsInRoom() - 1);
+        float needToPretend = Get2OrMoreAgentsInRoom(); //Decisive factor
+        float fear2 = GetAgentLeft();
+
+        //Graph factors
+        float fear1 = (-agentsInLastRoom) + 1;
+
+        List<Point2D> points = new List<Point2D>();
+        points.Add(new Point2D(0, 0));
+        points.Add(new Point2D(0.15f, 0));
+        points.Add(new Point2D(0.4f, 0.25f));
+        points.Add(new Point2D(0.5f, 0.5f));
+        points.Add(new Point2D(0.6f, 0.75f));
+        points.Add(new Point2D(0.85f, 1));
+        points.Add(new Point2D(1, 1));
+
+        float returnValue = 0.0f;
+        float x = tasksCompleted;
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            float xPoint = points[i].x;
+            if (i == 0 && x < xPoint) { returnValue = points[i].y; break; };
+            if ((i == points.Count - 1) && x > xPoint) { returnValue = points[i].y; break; };
+            if (x == xPoint) { returnValue = points[i].y; break; }
+
+            if (x > xPoint && x < points[i + 1].x)
+            {
+                returnValue = ((x - xPoint) / (points[i + 1].x - xPoint)) * (points[i + 1].y - points[i].y) + points[i].y;
+                break;
+            }
+        }
+
+        float riskToLose = returnValue; //Decisive factor
+
+        //Fusion factors
+        List<float> factors = new List<float>();
+        factors.Add(fear1);
+        factors.Add(fear2);
+
+        List<float> weights = new List<float>();
+        weights.Add(0.5f);
+        weights.Add(0.5f);
+
+        float sum = 0.0f;
+        for (int i = 0; i < factors.Count; i++)
+        {
+            float factor = factors[i];
+
+            sum += factor * weights[i];
+        }
+
+        float fearToBeDiscovered = sum;
+
+        factors.Clear();
+        factors.Add(riskToLose);
+        factors.Add(fearToBeDiscovered);
+        factors.Add(killingPossibility);
+
+        weights.Clear();
+        weights.Add(0.2f);
+        weights.Add(0.3f);
+        weights.Add(0.5f);
+
+        sum = 0.0f;
+        for (int i = 0; i < factors.Count; i++)
+        {
+            float factor = factors[i];
+
+            sum += factor * weights[i];
+        }
+
+        float killingNeed = sum; //Decisive factor
+
+        float[] decisiveFactors = { needToPretend, riskToLose, killingNeed };
+
+        float decision = Mathf.Max(decisiveFactors);
+
+        if(decision == needToPretend)
+        {
+            Pretend();
+        }
+        else if (decision == killingNeed)
+        {
+            Kill();
+        }
+        else if (decision == riskToLose)
+        {
+            Sabotage();
+        }
+    }
 }
