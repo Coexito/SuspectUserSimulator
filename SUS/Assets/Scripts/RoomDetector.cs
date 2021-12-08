@@ -21,15 +21,15 @@ public class RoomDetector : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.GetComponent<Agent>() != null)
-        {
-            newAg = other.gameObject.GetComponent<Agent>();
+        { 
             //Adding new agent to all inside room agents
-            setInfoAllAgents(newAg);
+            setInfoAllAgents(other.gameObject.GetComponent<Agent>());
             //Adding all agents inside the room to the agent.
-            addInsideAgents(newAg);
+            addInsideAgents(other.gameObject.GetComponent<Agent>());
             //Adding new agent to the room list
-            agentsInside.Add(newAg);            
+            agentsInside.Add(other.gameObject.GetComponent<Agent>());            
         }
+        //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
         other.gameObject.GetComponent<Agent>().clearList();
         other.gameObject.GetComponent<Agent>().getList();
         foreach (Agent ag in agentsInside)
@@ -48,6 +48,7 @@ public class RoomDetector : MonoBehaviour
             agentsInside.Remove(other.gameObject.GetComponent<Agent>());
             updateRoomsDictionary(other.gameObject.GetComponent<Agent>());
         }
+        //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
         other.gameObject.GetComponent<Agent>().clearList();
         other.gameObject.GetComponent<Agent>().getList();
         foreach (Agent ag in agentsInside)
@@ -64,11 +65,8 @@ public class RoomDetector : MonoBehaviour
         foreach(Agent ag in agentsInside)
         {
             ag.agentsInTheRoom.Add(agentInside.getAgentName(), agentInside);
-            //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
-
         }
     }
-
 
     //Delete the exit agent from all agents that are inside the room
     private void removeInfoAllAgents(Agent agentInside)
