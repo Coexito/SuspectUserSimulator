@@ -6,7 +6,7 @@ public class HonestAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
 
-    public HonestAgent(float _speed) : base(_speed)
+    public HonestAgent() : base()
     { 
         //SceneController.instance.agents.Add(this.gameObject);
     }

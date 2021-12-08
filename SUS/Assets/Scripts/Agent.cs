@@ -10,16 +10,17 @@ public class Agent : MonoBehaviour
     public Dictionary<string, Agent> sussyAgents;      // Agents suspected (to vote them later)
     private string agentName;
 
-    public Agent(float _speed)
-    {  
+    public Agent()
+    {
         agentsInTheRoom = new Dictionary<string, Agent>();
         agentsInMemory = new Dictionary<string, Agent>();
         sussyAgents = new Dictionary<string, Agent>();
 
-        agentName = "Agent" + Random.Range(0, 10000);
+       // agentName = "Agent" + Random.Range(0, 10000);
 
-        this.speed = _speed;
+        //this.speed = 5f;
     }
+
 
     private void Awake() {  }
     

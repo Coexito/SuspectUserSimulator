@@ -945,7 +945,7 @@ PrefabInstance:
       objectReference: {fileID: 2857467193457669657, guid: c7377ac5a8d9d2b499f4c019900f023c, type: 3}
     - target: {fileID: 5073568580362084341, guid: 67c0f25d9d5933349bd2221b52251d19, type: 3}
       propertyPath: totalHonestAgents
-      value: 5
+      value: 15
       objectReference: {fileID: 0}
     - target: {fileID: 5073568580362084341, guid: 67c0f25d9d5933349bd2221b52251d19, type: 3}
       propertyPath: totalTraitorAgents

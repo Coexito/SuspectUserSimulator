@@ -65,12 +65,18 @@ public class SceneController : MonoBehaviour
         for(int i = 0; i < totalHonestAgents; i++)
         {
             GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+            string name ="Agent" + (i+1);
+            h.name = name;
+            h.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(h);
         }
 
         for (int i = 0; i < totalTraitorAgents; i++)
         {
-            GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+            GameObject t = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+            string name ="Traitor" + (i+1);
+            t.name = name;
+            t.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(t);
         }
     }
@@ -117,17 +123,17 @@ public class SceneController : MonoBehaviour
         // (executes FinishVotation)
     }
 
-    public void VoteAgent(Agent ag, Agent agVoted, string votedName)
+    public void VoteAgent(Agent ag, Agent agVoted)
     {
         votesForAgents.Add(agVoted);
 
         //voteLogs.text += ag.getAgentName() + " has voted " + agVoted.getAgentName() + "\n";
-        voteLogs.text += ag.getAgentName() + " has voted " + votedName + "\n";
+        voteLogs.text += ag.getAgentName() + " has voted " + agVoted.getAgentName() + "\n";
     }
 
     private Agent CheckMostVoted()
     {
-        Agent a = new Agent(0f);
+        Agent a = new Agent();
         int i = 0;
 
         // Searchs for the most voted agent in the list (most repeated one)
