@@ -27,7 +27,7 @@ namespace RTS_Cam
         #endregion
 
         private Transform m_Transform; //camera tranform
-        public bool useFixedUpdate = false; //use FixedUpdate() or Update()
+        public bool useFixedUpdate = true; //use FixedUpdate() or Update()
 
         #region Movement
 
@@ -119,7 +119,7 @@ namespace RTS_Cam
 
         private float ScrollWheel
         {
-            get { return Input.GetAxis(zoomingAxis); }
+            get { return -Input.GetAxis(zoomingAxis); }
         }
 
         private Vector2 MouseAxis
@@ -168,6 +168,7 @@ namespace RTS_Cam
         private void Start()
         {
             m_Transform = transform;
+            screenEdgeBorder = 100f;
         }
 
         private void Update()

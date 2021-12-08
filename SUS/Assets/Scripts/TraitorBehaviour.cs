@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class TraitorBehaviour : MonoBehaviour
 {
@@ -8,12 +9,31 @@ public class TraitorBehaviour : MonoBehaviour
     private UtilitySystemEngine killingUS;
     private BehaviourTreeEngine pretendBT;
 
-    public SceneController worldController;
-    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 10;
+    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 2;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
+    private TraitorAgent thisAgent;
+    private NavMeshAgent agent;
+    [SerializeField] private Vector3 currentTask = new Vector3(-13.6f, 10.3f, 19.7f);
+
+    [SerializeField] private float timeWorking = 5f;
+
+    private float totalTasksDone;
+
     private void Awake()
-    {        
+    {
+        totalTasksDone = 0f;
+
+        // Creates the object that represents this agent & has data structures
+        thisAgent = new TraitorAgent(defaultSpeed);
+
+        agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
+        agent.speed = this.defaultSpeed;
+
+        pretendBT = new BehaviourTreeEngine(true);
+        killingUS = new UtilitySystemEngine(true);
+        generalFSM = new StateMachineEngine();
+
         //Pretend Behaviour Tree
         CreatePretendBehaviourTree();        
 
@@ -24,47 +44,42 @@ public class TraitorBehaviour : MonoBehaviour
         CreateGeneralFSM();        
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     void Update()
-    {
+    {  
         pretendBT.Update();
         killingUS.Update();
         generalFSM.Update();
     }
 
+    void FixedUpdate()
+    {
+        totalTasksDone = SceneController.instance.GetTasksDone();
+    }
+
     #region CreateMachines
 
     private void CreateGeneralFSM()
-    {
-        generalFSM = new StateMachineEngine();
-
-        State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
+    {        
+        State wanderState = generalFSM.CreateEntryState("wander", Wander);
         State workState = generalFSM.CreateSubStateMachine("work", killingUS);
 
         TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(cooldown);
-        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
+        Perception decisionTaken = generalFSM.CreatePerception<Perception>();
 
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
-        generalFSM.CreateTransition("decision tomada", workState, decisionTaken, wanderState);
+        killingUS.CreateExitTransition("decision tomada", workState, decisionTaken, wanderState);
     }
 
     private void CreateKillingUtilitySystem()
     {
-        killingUS = new UtilitySystemEngine(true);
-
         //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), worldController.GetTotalTasks(), 0f);
-        Factor agentsInLastRoom = new LeafVariable(() => GetNumberOfAgentsInLastRoom(), worldController.GetTotalHonestAgents(), 0f);
+        Factor tasksCompleted = new LeafVariable(() => totalTasksDone, SceneController.instance.GetTotalTasks(), 0f);
+        Factor agentsInLastRoom = new LeafVariable(GetNumberOfAgentsInLastRoom, SceneController.instance.GetTotalHonestAgents(), 0f);
 
         Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
-        Factor needToPretend = new LeafVariable(() => Get2OrMoreAgentsInRoom(), 1f, 0f); //Decisive factor
-        Factor fear2 = new LeafVariable(() => GetAgentLeft(), 1f, 0f);
+        Factor needToPretend = new LeafVariable(Get2OrMoreAgentsInRoom, 1f, 0f); //Decisive factor
+        Factor fear2 = new LeafVariable(GetAgentLeft, 1f, 0f);
 
         //Graph factors
         Factor fear1 = new LinearCurve(agentsInLastRoom, -1, 1);
@@ -104,32 +119,31 @@ public class TraitorBehaviour : MonoBehaviour
         Factor killingNeed = new WeightedSumFusion(factors, weights); //Decisive factor
 
         //Actions and decisions
-        killingUS.CreateUtilityAction("sabotear", () => Sabotage(), riskToLose);
-        killingUS.CreateUtilityAction("asesinar", () => Kill(), killingNeed);
-        killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
+        killingUS.CreateUtilityAction("sabotear", Sabotage, riskToLose);
+        killingUS.CreateUtilityAction("asesinar", Kill, killingNeed);
+        UtilityAction pretendUA = killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
+        
+        //Transition
+        BehaviourTreeStatusPerception pretendDone = killingUS.CreatePerception<BehaviourTreeStatusPerception>(pretendBT, ReturnValues.Succeed);
+        pretendBT.CreateExitTransition("Exit_Transition", pretendUA.utilityState, pretendDone, killingUS);
     }
 
     private void CreatePretendBehaviourTree()
-    {
-        pretendBT = new BehaviourTreeEngine(true);
-
+    { 
         SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
 
-        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", () => WalkToTask(), () => isInObjective());
-        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", () => Work(), () => finishedWorking());
+        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", WalkToTask, isInObjective);
+        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", Work, finishedWorking);
 
         rootNode.AddChild(walkToTask);
         rootNode.AddChild(pretendWork);
+
+        pretendBT.SetRootNode(rootNode);        
     }
 
     #endregion
 
     #region EntryUSDataMethods
-
-    private float GetNumberOfTasksCompleted()
-    {
-        return 0f;
-    }
 
     //Returns 1 if there's 2 or more honest agents with the traitor
     private float Get2OrMoreAgentsInRoom()
@@ -154,17 +168,12 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Sabotage()
     {
-        
+        Debug.Log("He decidido sabotear");
     }
 
     private void Kill()
     {
-
-    }
-
-    private void Pretend()
-    {
-
+        Debug.Log("He decidido matar");
     }
 
     #endregion
@@ -173,12 +182,18 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void WalkToTask()
     {
-
+        agent.SetDestination(currentTask);
     }
 
     private void Work()
     {
+        Debug.Log("Fingiendo");
+        StartCoroutine(TimerWork());
+    }
 
+    private IEnumerator TimerWork()
+    {
+        yield return new WaitForSeconds(timeWorking);
     }
 
     #endregion
@@ -186,7 +201,15 @@ public class TraitorBehaviour : MonoBehaviour
     #region BTEvaluationFunctions
     private ReturnValues isInObjective()
     {
-        return ReturnValues.Succeed;
+        // Checks if agent position is task position
+        if (Vector3.Distance(this.transform.position, currentTask) < 3)
+        {
+            return ReturnValues.Succeed;
+        }
+        else
+        {
+            return ReturnValues.Running;
+        }
     }
 
     private ReturnValues finishedWorking()
@@ -199,7 +222,7 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void Wander()
     {
-
+        Debug.Log("Estado Wander");
     }
 
     #endregion

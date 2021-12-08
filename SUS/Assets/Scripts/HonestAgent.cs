@@ -6,9 +6,47 @@ public class HonestAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
 
-    public HonestAgent(float _speed) : base(_speed)
-    {
+    public HonestAgent() : base()
+    { 
+        //SceneController.instance.agents.Add(this.gameObject);
+    }
+
+    private void Awake() {
         agentsFoundInKillingRoom = new Dictionary<string, Agent>();
     }
 
+    private void Start() 
+    {
+        
+    }
+
+
+    public override void StartVote()
+    {
+        base.StartVote();
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if(behaviour)
+            behaviour.FireVote();
+
+    }
+
+    public override void FinishVote()
+    {
+        base.FinishVote();
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if(behaviour)
+            behaviour.FireWander();
+    }
+
+    public override void Die()
+    {
+        base.Die();
+
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if(behaviour)
+            behaviour.FireDie();
+    }
 }

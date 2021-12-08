@@ -1,7 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
 
 
 public class HonestBehaviour : MonoBehaviour
@@ -10,22 +10,25 @@ public class HonestBehaviour : MonoBehaviour
     private StateMachineEngine defaultFSM;
     private BehaviourTreeEngine workBT;
 
-    private HonestAgent thisAgent;
+    public Agent thisAgent;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     private NavMeshAgent agent;
     [SerializeField] private Vector3 currentTask = Vector3.zero;
     private bool taskFound = false;
+    private bool vote = false;
+    private bool killed = false;
 
     [SerializeField] private float timeWorking = 5f;
 
     void Awake()
     {
         // Creates the object that represents this agent & has data structures
-        thisAgent = new HonestAgent(defaultSpeed);
+        thisAgent = GetComponent<Agent>();
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
-        agent.speed = this.defaultSpeed;
+        thisAgent.setSpeed(defaultSpeed);
+        agent.speed = thisAgent.getSpeed();
 
         //Work Behaviour Tree
         workBT = new BehaviourTreeEngine(true);
@@ -39,17 +42,17 @@ public class HonestBehaviour : MonoBehaviour
         CreateFMS();
     }
 
+    private void Start() 
+    {
+        SetTextName();
+    }
+
     void Update()
     {
         workBT.Update();
         defaultFSM.Update();
         generalFSM.Update();
 
-
-        if(Input.GetKeyDown(KeyCode.Space))
-            defaultFSM.Fire("killed");
-        else if(Input.GetKeyDown(KeyCode.V))
-            defaultFSM.Fire("vote called");
     }
 
     private void CreateFMS()
@@ -62,12 +65,16 @@ public class HonestBehaviour : MonoBehaviour
         // Perceptions
         ValuePerception	task = defaultFSM.CreatePerception<ValuePerception>(() => taskFound == true);
         BehaviourTreeStatusPerception taskDone = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Succeed);
+        BehaviourTreeStatusPerception votationCalled = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Failed);
+        BehaviourTreeStatusPerception killedWorking = defaultFSM.CreatePerception<BehaviourTreeStatusPerception>(workBT, ReturnValues.Failed);
 
         // Transitions
         defaultFSM.CreateTransition("task found", wanderState, task, workState);
         workBT.CreateExitTransition("BT done", workState, taskDone, wanderState);
+        workBT.CreateExitTransition("votation called", workState, votationCalled, wanderState);
+        workBT.CreateExitTransition("killed working", workState, killedWorking, wanderState);
 
-        
+
         // States
         State initialState = generalFSM.CreateEntryState("idle");
         State defaultState = generalFSM.CreateSubStateMachine("default", defaultFSM);
@@ -75,17 +82,17 @@ public class HonestBehaviour : MonoBehaviour
         State deadState = generalFSM.CreateState("dead", Die);
 
         // Perceptions
-        Perception born = generalFSM.CreatePerception<TimerPerception>(1f);
-        Perception voteCalled = generalFSM.CreatePerception<PushPerception>();
+        Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);  // Waits a quarter of a second until they do something
+        Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
         Perception voteFinished = generalFSM.CreatePerception<PushPerception>();
-        Perception youWereKilled = generalFSM.CreatePerception<PushPerception>();
+        Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
 
 
         // Transitions
         generalFSM.CreateTransition("born", initialState, born, defaultState); // When born, enters the default state & starts looking for work
-        defaultFSM.CreateExitTransition("vote called", workState, voteCalled, votingState);
-        generalFSM.CreateTransition("vote finished", votingState, voteCalled, defaultState);
-        defaultFSM.CreateExitTransition("killed", workState, youWereKilled, deadState);
+        defaultFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
+        generalFSM.CreateTransition("vote finished", votingState, voteCalled, initialState);
+        defaultFSM.CreateExitTransition("killed", wanderState, youWereKilled, deadState);
 
     }
     private void CreateBT()
@@ -101,12 +108,22 @@ public class HonestBehaviour : MonoBehaviour
         workBT.SetRootNode(rootNode);
     }
 
+    private void SetTextName()
+    {
+        TextMeshProUGUI nameTXT = transform.FindDeepChild("NameTXT").GetComponent<TextMeshProUGUI>();
+        nameTXT.SetText(thisAgent.getAgentName());
+    }
+
 
     #region FSMActions
     private void Wander()
     {
-        agent.SetDestination(GetRandomPoint(transform.position, 20f));
-        SceneController.instance.IWantATask(this);
+        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
+        SceneController.instance.IWantATask(this);  // Asks for a task
+
+        agent.speed = thisAgent.getSpeed(); // Sets the default speed
+        agent.SetDestination(GetRandomPoint(transform.position, 20f));  // Walks randomly until given a task
+        
     }
 
     // Get Random Point on a Navmesh surface
@@ -141,9 +158,43 @@ public class HonestBehaviour : MonoBehaviour
             
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
-        Debug.Log("Juanjo for president");
+        Debug.Log("Voting...");
+
+        vote = false;
+
+        // Dismisses his task
+        taskFound = false;  
+        currentTask = Vector3.zero;
+        agent.speed = 0;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
+
+        /*
+            Vote random agent (TO BE CHANGED)
+            _________________________________
+        */
+        // Random agent
+        int r = Random.Range(0, SceneController.instance.agents.Count);
+        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        //Debug.Log(honest.thisAgent.getAgentName());
+        //Debug.Log(ag.getAgentName());
+
+        // Votes the agent
+        SceneController.instance.VoteAgent(thisAgent, agVoted);
+
+        /*
+           _________________________________
+        */
+    }
+
+    public void FireVote()
+    {
+        vote = true;
+    }
+
+    public void FireWander()
+    {
+        generalFSM.Fire("vote finished");
     }
 
     private void Die()
@@ -161,6 +212,11 @@ public class HonestBehaviour : MonoBehaviour
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
         //Destroy(this.gameObject);
     }
+
+    public void FireDie()
+    {
+        killed = true;
+    }
     #endregion
 
     #region BTActions
@@ -174,6 +230,7 @@ public class HonestBehaviour : MonoBehaviour
     private void WorkBT()
     {
         StartCoroutine(TimerWork());
+        SceneController.instance.TaskDone();
     }
 
     private IEnumerator TimerWork()
@@ -188,47 +245,27 @@ public class HonestBehaviour : MonoBehaviour
     #region BTEvaluationFunctions
     private ReturnValues isInObjective()
     {
-        // Checks if agent position is task position
-        if(Vector3.Distance(this.transform.position, currentTask) < 3)
-        {
-            return ReturnValues.Succeed;
-        }
+        if (vote || killed)
+            return ReturnValues.Failed;
         else
         {
-            return ReturnValues.Running;
-        }
+            // Checks if agent position is task position
+            if (Vector3.Distance(this.transform.position, currentTask) < 3)
+                return ReturnValues.Succeed;
+            else
+                return ReturnValues.Running;
+        }        
     }
 
     private ReturnValues finishedWorking()
     {
-        currentTask = Vector3.zero;
-        return ReturnValues.Succeed;
+        if (vote || killed)
+            return ReturnValues.Failed;
+        else
+        {
+            currentTask = Vector3.zero;
+            return ReturnValues.Succeed;
+        }
     }
-    #endregion
-
-    #region EntryUSDataMethods
-
-    private float GetNumberOfTasksCompleted()
-    {
-        return 0f;
-    }
-
-    //Returns 1 if there's 2 or more honest agents with the traitor
-    private float Get2OrMoreAgentsInRoom()
-    {
-        return 0f;
-    }
-
-    private float GetNumberOfAgentsInLastRoom()
-    {
-        return 0f;
-    }
-
-    //Returns 0 if an agent just left the room
-    private float GetAgentLeft()
-    {
-        return 0f;
-    }
-
     #endregion
 }
