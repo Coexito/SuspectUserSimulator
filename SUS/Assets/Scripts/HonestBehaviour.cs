@@ -1,7 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
 
 
 public class HonestBehaviour : MonoBehaviour
@@ -10,7 +10,7 @@ public class HonestBehaviour : MonoBehaviour
     private StateMachineEngine defaultFSM;
     private BehaviourTreeEngine workBT;
 
-    private HonestAgent thisAgent;
+    public Agent thisAgent;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     private NavMeshAgent agent;
@@ -25,10 +25,11 @@ public class HonestBehaviour : MonoBehaviour
     void Awake()
     {
         // Creates the object that represents this agent & has data structures
-        thisAgent = new HonestAgent(defaultSpeed);
+        thisAgent = GetComponent<Agent>();
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
-        agent.speed = this.defaultSpeed;
+        thisAgent.setSpeed(defaultSpeed);
+        agent.speed = thisAgent.getSpeed();
 
         //Work Behaviour Tree
         workBT = new BehaviourTreeEngine(true);
@@ -40,6 +41,11 @@ public class HonestBehaviour : MonoBehaviour
 
         CreateBT();
         CreateFMS();
+    }
+
+    private void Start() 
+    {
+        SetTextName();
     }
 
     void Update()
@@ -77,7 +83,7 @@ public class HonestBehaviour : MonoBehaviour
         State deadState = generalFSM.CreateState("dead", Die);
 
         // Perceptions
-        Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);
+        Perception born = generalFSM.CreatePerception<TimerPerception>(0.25f);  // Waits a quarter of a second until they do something
         Perception voteCalled = generalFSM.CreatePerception<ValuePerception>(() => vote == true);
         Perception voteFinished = generalFSM.CreatePerception<ValuePerception>(() => vote == false);
         Perception youWereKilled = generalFSM.CreatePerception<ValuePerception>(() => killed == true);
@@ -101,6 +107,12 @@ public class HonestBehaviour : MonoBehaviour
         rootNode.AddChild(work);
 
         workBT.SetRootNode(rootNode);
+    }
+
+    private void SetTextName()
+    {
+        TextMeshProUGUI nameTXT = transform.FindDeepChild("NameTXT").GetComponent<TextMeshProUGUI>();
+        nameTXT.SetText(thisAgent.getAgentName());
     }
 
 
@@ -148,7 +160,7 @@ public class HonestBehaviour : MonoBehaviour
             
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
-        Debug.Log("Juanjo for president");
+        Debug.Log("Voting...");
 
         
         SceneController.instance.DeleteAgentsWaitingForTask(this);
@@ -159,6 +171,23 @@ public class HonestBehaviour : MonoBehaviour
         agent.speed = 0;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
+
+        /*
+            Vote random agent (TO BE CHANGED)
+            _________________________________
+        */
+        // Random agent
+        int r = Random.Range(0, SceneController.instance.agents.Count);
+        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        //Debug.Log(honest.thisAgent.getAgentName());
+        //Debug.Log(ag.getAgentName());
+
+        // Votes the agent
+        SceneController.instance.VoteAgent(thisAgent, agVoted);
+
+        /*
+           _________________________________
+        */
     }
 
     public void FireVote()
@@ -221,9 +250,7 @@ public class HonestBehaviour : MonoBehaviour
     private ReturnValues isInObjective()
     {
         if (vote || killed)
-        {
             return ReturnValues.Failed;
-        }
         else
         {
             // Checks if agent position is task position
@@ -233,18 +260,14 @@ public class HonestBehaviour : MonoBehaviour
                 return ReturnValues.Succeed;
             }
             else
-            {
                 return ReturnValues.Running;
-            }
         }        
     }
 
     private ReturnValues finishedWorking()
     {
         if (vote || killed)
-        {
             return ReturnValues.Failed;
-        }
         else
         {
             if (notWorking)
