@@ -32,6 +32,8 @@ public class SceneController : MonoBehaviour
     [SerializeField] private List<HonestBehaviour> agentsWaitingForTask;
     public List<Vector3> availableTasks;
     [SerializeField] private List<Agent> votesForAgents;
+
+    public Vector3 EMERGENCY_POINT;
     
     void Awake()
     {
@@ -51,13 +53,12 @@ public class SceneController : MonoBehaviour
     private void Update() {
         AssignTasks();
 
-        if(Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
             KillAgent(agents[0]);
-        else if(Input.GetKeyDown(KeyCode.V))
+        else if (Input.GetKeyDown(KeyCode.V))
             StartCoroutine(StartVotation());
-        else if(Input.GetKeyDown(KeyCode.F))
+        else if (Input.GetKeyDown(KeyCode.F))
             FinishVotation();
-
     }
 
     private void SpawnAgents()
@@ -99,7 +100,7 @@ public class SceneController : MonoBehaviour
     }
 
     #region Voting functions
-    private IEnumerator StartVotation()
+    public IEnumerator StartVotation()
     {
         voteLogs.SetText("Votes:\n\n");
         canvas.SetActive(true);  // Opens the canvas

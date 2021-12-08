@@ -73,6 +73,12 @@ public class RoomDetector : MonoBehaviour
     {
         foreach(Agent ag in agentsInside)
         {
+            if (agentInside is HonestAgent)
+            {
+                if (ag is TraitorAgent)
+                    ((TraitorAgent)ag).AgentLeft();
+            }
+
             ag.agentsInTheRoom.Remove(agentInside.getAgentName());
             agentInside.clearList();
             agentInside.getList();

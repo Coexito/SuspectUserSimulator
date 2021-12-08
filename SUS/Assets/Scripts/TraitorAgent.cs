@@ -5,10 +5,78 @@ using UnityEngine;
 public class TraitorAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
+    private bool agentLeft = false;
+    private HonestAgent victim;
 
-    public TraitorAgent(float _speed) : base ()
+    public TraitorAgent() : base ()
     {
         agentsFoundInKillingRoom = new Dictionary<string, Agent>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (agentLeft)
+            StartCoroutine(TimerAgentLeft());
+    }
+
+    private IEnumerator TimerAgentLeft()
+    {
+        // Stops the agent until he finishes the task   
+        yield return new WaitForSeconds(2f);
+        agentLeft = false;
+    }
+
+    public int NumberOfHonestAgentsInRoom()
+    {
+        int total = 0;
+
+        foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
+        {
+            if (ag.Value is HonestAgent)
+                total++;
+        }
+
+        return total;
+    }
+
+    public int NumberOfHonestAgentsInLastRoom()
+    {
+        int total = 0;
+
+        foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
+        {
+            if (ag.Value is HonestAgent)
+                total++;
+        }
+
+        return total;
+    }
+
+    public void AgentLeft()
+    {
+        agentLeft = true;
+    }
+
+    public bool GetAgentLeft()
+    {
+        return agentLeft;
+    }
+
+    public HonestAgent GetVictim()
+    {
+        return victim;
+    }
+
+    public void SetVictim()
+    {
+        foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
+        {
+            if (ag.Value is HonestAgent)
+            {
+                victim = (HonestAgent)ag.Value;
+                break;
+            }
+        }
     }
 
     public override void StartVote()
