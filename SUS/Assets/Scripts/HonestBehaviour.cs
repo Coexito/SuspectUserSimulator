@@ -290,4 +290,8 @@ public class HonestBehaviour : MonoBehaviour
         }
     }
     #endregion
+
+    #region Setters&Getters
+    public bool Killed { get => killed; set => killed = value; }
+    #endregion
 }
