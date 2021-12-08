@@ -27,13 +27,6 @@ public class Agent : MonoBehaviour
 
         //this.speed = 5f;
     }
-
-
-    private void Awake() {  }
-
-    public void Update() {
-
-    }
     
     public void getList()
     {
