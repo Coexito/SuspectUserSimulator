@@ -225,6 +225,7 @@ public class HonestBehaviour : MonoBehaviour
         */
         Debug.Log("Im dead :(");
         spriteStateController.SetStateIcon("die");
+        thisAgent.GetActualRoom().AgentKilledInRoom((HonestAgent) thisAgent);
         this.GetComponentInParent<CapsuleCollider>().enabled = false;
         agent.SetDestination(transform.position);
         this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);

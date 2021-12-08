@@ -150,9 +150,9 @@ public class TraitorBehaviour : MonoBehaviour
     {
         for (; ; )
         {
-            if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 3)
+            if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 2.25f)
             {
-                thisAgent.GetVictim().Die();
+                SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);                
                 generalFSM.Fire("decision tomada");
             }
             yield return new WaitForSeconds(.1f);

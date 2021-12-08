@@ -177,9 +177,8 @@ public class SceneController : MonoBehaviour
         agents.Add(a);
     }
 
-    private void KillAgent(GameObject ag)
+    public void KillAgent(GameObject ag)
     {
-        voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
 

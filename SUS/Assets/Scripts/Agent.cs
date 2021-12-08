@@ -14,6 +14,8 @@ public class Agent : MonoBehaviour
     [SerializeField] private List<string> agentsInTheRoomList;
     [SerializeField] private List<string> agentsInTheRoomList1;
     [SerializeField] private List<string> agentsInTheRoomList2;
+
+    private RoomDetector actualRoom;
     public Agent()
     {
         agentsInTheRoom = new Dictionary<string, Agent>();
@@ -25,6 +27,15 @@ public class Agent : MonoBehaviour
         agentsInTheRoomList1 = new List<string>();
     }
         
+    public void SetActualRoom(RoomDetector dt)
+    {
+        actualRoom = dt;
+    }
+
+    public RoomDetector GetActualRoom()
+    {
+        return actualRoom;
+    }
 
     public void getList()
     {

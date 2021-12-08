@@ -21,14 +21,16 @@ public class RoomDetector : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.GetComponent<Agent>() != null)
-        { 
+        {
+            other.gameObject.GetComponent<Agent>().SetActualRoom(this);
             //Adding new agent to all inside room agents
             setInfoAllAgents(other.gameObject.GetComponent<Agent>());
             //Adding all agents inside the room to the agent.
             addInsideAgents(other.gameObject.GetComponent<Agent>());
             //Adding new agent to the room list
-            agentsInside.Add(other.gameObject.GetComponent<Agent>());            
+            agentsInside.Add(other.gameObject.GetComponent<Agent>());
         }
+
         //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
         other.gameObject.GetComponent<Agent>().clearList();
         other.gameObject.GetComponent<Agent>().getList();
@@ -56,6 +58,13 @@ public class RoomDetector : MonoBehaviour
             ag.clearList();
             ag.getList();
         }
+    }
+
+    public void AgentKilledInRoom(HonestAgent victim)
+    {
+        removeInfoAllAgents(victim);
+        agentsInside.Remove(victim);
+        updateRoomsDictionary(victim);
     }
 
 
