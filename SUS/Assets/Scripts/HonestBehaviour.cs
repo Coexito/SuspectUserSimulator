@@ -10,7 +10,7 @@ public class HonestBehaviour : MonoBehaviour
     private StateMachineEngine defaultFSM;
     private BehaviourTreeEngine workBT;
 
-    private HonestAgent thisAgent;
+    public Agent thisAgent;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
 
     private NavMeshAgent agent;
@@ -24,9 +24,10 @@ public class HonestBehaviour : MonoBehaviour
     void Awake()
     {
         // Creates the object that represents this agent & has data structures
-        thisAgent = new HonestAgent(defaultSpeed);
+        thisAgent = GetComponent<Agent>();
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
+        thisAgent.setSpeed(defaultSpeed);
         agent.speed = thisAgent.getSpeed();
 
         //Work Behaviour Tree
@@ -172,9 +173,14 @@ public class HonestBehaviour : MonoBehaviour
             Vote random agent (TO BE CHANGED)
             _________________________________
         */
-
+        // Random agent
         int r = Random.Range(0, SceneController.instance.agents.Count);
-        SceneController.instance.VoteAgent(thisAgent, SceneController.instance.agents[r].GetComponent<Agent>());
+        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        //Debug.Log(honest.thisAgent.getAgentName());
+        //Debug.Log(ag.getAgentName());
+
+        // Votes the agent
+        SceneController.instance.VoteAgent(thisAgent, agVoted);
 
         /*
            _________________________________

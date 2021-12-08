@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -23,14 +24,14 @@ public class SceneController : MonoBehaviour
     [HideInInspector] public bool sabotageHappening;
     
     private TextMeshProUGUI voteLogs;
-    [SerializeField] GameObject canvas;
+    [SerializeField] private GameObject canvas;
     
 
     // Data structures
     public List<GameObject> agents;
     [SerializeField] private List<HonestBehaviour> agentsWaitingForTask;
     public List<Vector3> availableTasks;
-    private List<Agent> votesForAgents;
+    [SerializeField] private List<Agent> votesForAgents;
     
     void Awake()
     {
@@ -53,7 +54,7 @@ public class SceneController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Space))
             KillAgent(agents[0]);
         else if(Input.GetKeyDown(KeyCode.V))
-            StartVotation();
+            StartCoroutine(StartVotation());
         else if(Input.GetKeyDown(KeyCode.F))
             FinishVotation();
 
@@ -64,20 +65,25 @@ public class SceneController : MonoBehaviour
         for(int i = 0; i < totalHonestAgents; i++)
         {
             GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            //string name ="Agent" + (i+1);
-            //h.name = name;
-            //h.GetComponent<HonestAgent>().setAgentName(name);
+            string name ="Agent" + (i+1);
+            h.name = name;
+            h.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(h);
         }
 
         for (int i = 0; i < totalTraitorAgents; i++)
         {
-            GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            string name = "Agent" + (i + 1);
+            GameObject t = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+            string name ="Traitor" + (i+1);
             t.name = name;
             t.GetComponent<HonestAgent>().setAgentName(name);
             agents.Add(t);
         }
+    }
+
+    public void AddAgent(GameObject a)
+    {
+        agents.Add(a);
     }
 
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
@@ -93,8 +99,9 @@ public class SceneController : MonoBehaviour
     }
 
     #region Voting functions
-    private void StartVotation()
+    private IEnumerator StartVotation()
     {
+        voteLogs.SetText("Votes:\n\n");
         canvas.SetActive(true);  // Opens the canvas
 
         foreach (GameObject ag in agents)
@@ -102,18 +109,31 @@ public class SceneController : MonoBehaviour
 
         agentsWaitingForTask.Clear();
 
+        yield return new WaitForSeconds(1f);
+
+        // - Votation process -
+        // Checks the most voted
+        Agent agent = CheckMostVoted(); 
+
+        // Ejecs the agent and writes in the logs
+        EjectAgent(agent);
+        voteLogs.text += "\n\n" + agent.getAgentName() + " was the most voted agent.\n";
+
+        // Now the user has to finish the votation by pressing the button...
+        // (executes FinishVotation)
     }
 
     public void VoteAgent(Agent ag, Agent agVoted)
     {
         votesForAgents.Add(agVoted);
+
+        //voteLogs.text += ag.getAgentName() + " has voted " + agVoted.getAgentName() + "\n";
         voteLogs.text += ag.getAgentName() + " has voted " + agVoted.getAgentName() + "\n";
-        //voteLogs.SetText(ag.getAgentName() + " has voted " + agVoted.getAgentName() + "\n");
     }
 
     private Agent CheckMostVoted()
     {
-        Agent a = new Agent(0f);
+        Agent a = new Agent();
         int i = 0;
 
         // Searchs for the most voted agent in the list (most repeated one)
@@ -140,38 +160,33 @@ public class SceneController : MonoBehaviour
 
     private void EjectAgent(Agent ag)
     {
-        agents.Remove(ag.gameObject);
-
-        if(ag is HonestAgent)
+        if(ag != null)
         {
-            agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
-        }
+            agents.Remove(ag.gameObject);
 
-        Destroy(ag.gameObject);
+            if(ag is HonestAgent)
+                agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
+
+            Destroy(ag.gameObject);
+        }
+        
     }
 
     public void FinishVotation()
     {
-        // - Votation process -
-        // Checks the most voted
-        Agent agent = CheckMostVoted(); 
-
-        // Ejecs the agent and writes in the logs
-        EjectAgent(agent);
-
-        // Now the user has to finish the votation by pressing the button...
+        
 
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().FinishVote();
 
         canvas.SetActive(false);
+        votesForAgents.Clear();
     }
 
     #endregion
 
     private void KillAgent(GameObject ag)
     {
-
         voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
