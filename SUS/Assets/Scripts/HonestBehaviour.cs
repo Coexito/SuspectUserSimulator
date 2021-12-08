@@ -21,6 +21,8 @@ public class HonestBehaviour : MonoBehaviour
 
     [SerializeField] private float timeWorking = 5f;
 
+
+
     void Awake()
     {
         // Creates the object that represents this agent & has data structures
@@ -267,5 +269,9 @@ public class HonestBehaviour : MonoBehaviour
             return ReturnValues.Succeed;
         }
     }
+    #endregion
+
+    #region Setters&Getters
+    public bool Killed { get => killed; set => killed = value; }
     #endregion
 }

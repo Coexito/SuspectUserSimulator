@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,31 +16,101 @@ public class RoomDetector : MonoBehaviour
     {
         
     }
+    
+    //When an agent enters into a room
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Entró en Sala: " + this.name + " el agente: " + other.gameObject.name + " lo mismo: " + other.gameObject.GetComponent<Agent>().getAgentName());
         if (other.gameObject.GetComponent<Agent>() != null)
         {
             newAg = other.gameObject.GetComponent<Agent>();
-            setInfoAllAgents(other.gameObject.name, newAg);
-            agentsInside.Add(newAg);
+            //Adding new agent to all inside room agents
+            setInfoAllAgents(newAg);
+            //Adding all agents inside the room to the agent.
+            addInsideAgents(newAg);
+            //Adding new agent to the room list
+            agentsInside.Add(newAg);            
         }
-        
-        
+        other.gameObject.GetComponent<Agent>().clearList();
+        other.gameObject.GetComponent<Agent>().getList();
+        foreach (Agent ag in agentsInside)
+        { 
+            ag.clearList();
+            ag.getList();
+        }
     }
 
+    //When an agent exits a room
     private void OnTriggerExit(Collider other)
     {
         if (other.gameObject.GetComponent<Agent>() != null)
+        {
+            removeInfoAllAgents(other.gameObject.GetComponent<Agent>());
             agentsInside.Remove(other.gameObject.GetComponent<Agent>());
-            Debug.Log("Salió de Sala: " + this.name + " el agente: " + other.gameObject.name);
+            updateRoomsDictionary(other.gameObject.GetComponent<Agent>());
+        }
+        other.gameObject.GetComponent<Agent>().clearList();
+        other.gameObject.GetComponent<Agent>().getList();
+        foreach (Agent ag in agentsInside)
+        {
+            ag.clearList();
+            ag.getList();
+        }
     }
 
-    private void setInfoAllAgents(string name,Agent agentInside)
+
+    //Add the incoming agent to all agents inside the room
+    private void setInfoAllAgents(Agent agentInside)
     {
         foreach(Agent ag in agentsInside)
         {
-            //ag.agentsInTheRoom.Add(agentInside.getAgentName(), agentInside);
+            ag.agentsInTheRoom.Add(agentInside.getAgentName(), agentInside);
+            //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
+
         }
     }
+
+
+    //Delete the exit agent from all agents that are inside the room
+    private void removeInfoAllAgents(Agent agentInside)
+    {
+        foreach(Agent ag in agentsInside)
+        {
+            ag.agentsInTheRoom.Remove(agentInside.getAgentName());
+            agentInside.clearList();
+            agentInside.getList();
+            ag.clearList();
+            ag.getList();
+        }
+    }
+
+    //Add all agents inside the room to the incoming agent
+    private void addInsideAgents(Agent incomingAgent)
+    {
+        foreach(Agent ag in agentsInside)
+        {
+            incomingAgent.agentsInTheRoom.Add(ag.getAgentName(), ag);
+        }
+    }
+
+    //Adding all the info to the last 2 rooms.
+    private void updateRoomsDictionary(Agent exitAgent)
+    {
+        //Clear agentsInThe2Room
+        exitAgent.agentsInThe2Room.Clear();
+        //Copy everything from agentsInThe1Room to agentsInThe2Room
+        foreach (KeyValuePair<string,Agent> ag in exitAgent.agentsInThe1Room)
+        {
+            exitAgent.agentsInThe2Room.Add(ag.Key, (Agent)ag.Value);
+        }
+        //Clear agentsInThe1Room
+        exitAgent.agentsInThe1Room.Clear();
+        //Copy everything from agentsInTheRoom to agentsInThe1Room
+        foreach (KeyValuePair<string, Agent> ag in exitAgent.agentsInTheRoom)
+        {
+            exitAgent.agentsInThe1Room.Add(ag.Key, (Agent)ag.Value);
+        }
+        //Clear agentsInTheRoom
+        exitAgent.agentsInTheRoom.Clear();
+    }
+
 }
