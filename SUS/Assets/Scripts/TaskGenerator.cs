@@ -12,7 +12,9 @@ using UnityEngine;
 
 public class TaskGenerator : MonoBehaviour
 {
-    [SerializeField] private List<Vector3> tasksCoords;    // Lista de posiciones en las que hacer una tarea
+    public static TaskGenerator instance;
+
+    public List<Vector3> tasksCoords;    // Lista de posiciones en las que hacer una tarea
     [SerializeField] private float minSecs = 1.0f;        // Minima cantidad de segundos antes de que aparezca el objeto
     [SerializeField] private float maxSecs = 5.0f;        // Maxima cantidad de segundos antes de que aparezca el objeto
     
@@ -21,14 +23,15 @@ public class TaskGenerator : MonoBehaviour
 
     void Awake()
     {
+        instance = this;
         List<GameObject> tasks = new List<GameObject>();
         tasksCoords = new List<Vector3>();
         SetTasksCoords(tasksCoords);
-        
     }
 
     private void Start() {
-        MAX_TASKS_AVAILABLE = Mathf.RoundToInt(SceneController.instance.GetTotalHonestAgents() / 2); 
+        MAX_TASKS_AVAILABLE = Mathf.RoundToInt(SceneController.instance.GetTotalHonestAgents() / 2) + 1;
+        SceneController.instance.EMERGENCY_POINT = transform.Find("EmergencyPoint").transform.position;
     }
 
     void Update()

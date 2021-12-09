@@ -1,25 +1,70 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Agent
+
+public class Agent : MonoBehaviour
 {
     private float speed; // Speed for the agents
     public Dictionary<string, Agent> agentsInTheRoom;  // Agents in the current room (where this agent is)
-    public Dictionary<string, Agent> agentsInMemory;   // Agents remembered in the last 2 rooms
+    public Dictionary<string, Agent> agentsInThe1Room;   // Agents remembered in the last 2 rooms
+    public Dictionary<string, Agent> agentsInThe2Room;
     public Dictionary<string, Agent> sussyAgents;      // Agents suspected (to vote them later)
-    public List<Vector3> objectives;                   // Position of objectives in the map
+    private string agentName;
 
-    public Agent(float _speed)
+    public int[] rooms;
+    [SerializeField] private List<string> agentsInTheRoomList;
+    [SerializeField] private List<string> agentsInTheRoomList1;
+    [SerializeField] private List<string> agentsInTheRoomList2;
+
+    private RoomDetector actualRoom;
+    private Vector3 sabotageTask = Vector3.zero;
+
+    public Agent()
     {
         agentsInTheRoom = new Dictionary<string, Agent>();
-        agentsInMemory = new Dictionary<string, Agent>();
+        agentsInThe1Room = new Dictionary<string, Agent>();
+        agentsInThe2Room = new Dictionary<string, Agent>();
         sussyAgents = new Dictionary<string, Agent>();
-        objectives = new List<Vector3>();
+        agentsInTheRoomList = new List<string>();
+        agentsInTheRoomList2 = new List<string>();
+        agentsInTheRoomList1 = new List<string>();
+        rooms = new int[3];
+        // agentName = "Agent" + Random.Range(0, 10000);
 
-        speed = _speed;
+        //this.speed = 5f;
     }
-    
+
+    public void SetActualRoom(RoomDetector dt)
+    {
+        actualRoom = dt;
+    }
+
+    public RoomDetector GetActualRoom()
+    {
+        return actualRoom;
+    }
+
+    public void getList()
+    {
+        foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
+        {
+            agentsInTheRoomList.Add(ag.Key);
+        }
+        foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
+        {
+            agentsInTheRoomList1.Add(ag.Key);
+        }
+        foreach (KeyValuePair<string, Agent> ag in agentsInThe2Room)
+        {
+            agentsInTheRoomList2.Add(ag.Key);
+        }
+    }
+    public void clearList()
+    {
+        agentsInTheRoomList.Clear();
+        agentsInTheRoomList2.Clear();
+        agentsInTheRoomList1.Clear();
+    }
     public void setSpeed(float s)
     {
         speed = s;
@@ -28,6 +73,30 @@ public class Agent
     {
         return this.speed;
     }
-    
+
+    public string getAgentName()
+    {
+        return this.agentName;
+    }
+
+    public void setAgentName(string s)
+    {
+        this.agentName = s;
+    }
+
+    public virtual void StartVote() { }
+
+    public virtual void FinishVote() { }
+
+    public virtual void Die() { }
+
+    public virtual void StartSabotage(Vector3 sabotagePos) { sabotageTask = sabotagePos; }
+
+    public virtual void EndSabotage() { }
+
+    public Vector3 GetSabotagePoint()
+    {
+        return sabotageTask;
+    }
 
 }

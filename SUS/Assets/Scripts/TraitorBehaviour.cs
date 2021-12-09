@@ -1,73 +1,339 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
+using TMPro;
 
 public class TraitorBehaviour : MonoBehaviour
 {
+    private StateMachineEngine defaultFSM;
     private StateMachineEngine generalFSM;
-    private UtilitySystemEngine killingUS;
-    private BehaviourTreeEngine pretendBT;
 
-    public SceneController worldController;
-    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 10;
+    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private float cooldown = 0.5f;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
+    [SerializeField] private float distanceToRandomWalk = 50f;
+
+    private TraitorAgent thisAgent;
+    private NavMeshAgent agent;
+    private Animator animator;
+
+    [SerializeField] private Vector3 currentTask = Vector3.zero;
+    [SerializeField] private float timeWorking = 5f;
+
+    private bool vote = false;
+    private bool activeSabotage = false;
+    
+    private SpriteStateController spriteStateController; // To change the state sprite
+
 
     private void Awake()
-    {        
-        //Pretend Behaviour Tree
-        CreatePretendBehaviourTree();        
+    {
 
-        //Killing Utility System
-        CreateKillingUtilitySystem();        
+        // Creates the object that represents this agent & has data structures
+        thisAgent = GetComponent<TraitorAgent>();
+        thisAgent.setSpeed(defaultSpeed);
+
+        agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
+        agent.speed = thisAgent.getSpeed();
+
+        animator = GetComponent<Animator>();
+
+        generalFSM = new StateMachineEngine(true);
+        defaultFSM = new StateMachineEngine();
+
+        spriteStateController = GetComponent<SpriteStateController>();
 
         //General FSM
-        CreateGeneralFSM();        
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+        CreateFSM();        
     }
 
     // Update is called once per frame
     void Update()
-    {
-        pretendBT.Update();
-        killingUS.Update();
+    {  
         generalFSM.Update();
+        defaultFSM.Update();
+
+        if(GetComponent<Rigidbody>().velocity == Vector3.zero)    // If the agent stays in place
+        {
+            animator.SetBool("isWalking", false);
+            animator.SetBool("isRunning", false);
+        }
+            
+    }
+
+    private void Start() 
+    {
+        SetTextName();
+    }
+
+    public void StartSabotage()
+    {
+        activeSabotage = true;
+    }
+
+    public void EndSabotage()
+    {
+        activeSabotage = false;
+    }
+
+    private void SetTextName()
+    {
+        TextMeshProUGUI nameTXT = transform.FindDeepChild("NameTXT").GetComponent<TextMeshProUGUI>();
+        nameTXT.SetText(thisAgent.getAgentName());
     }
 
     #region CreateMachines
 
-    private void CreateGeneralFSM()
+    private void CreateFSM()
     {
-        generalFSM = new StateMachineEngine();
+        //Create submachine
 
-        State wanderState = generalFSM.CreateEntryState("wander", () => Wander());
-        State workState = generalFSM.CreateSubStateMachine("work", killingUS);
+        State wanderState = generalFSM.CreateEntryState("wander", Wander);
+        State workState = generalFSM.CreateState("work", TakeDecision);
 
         TimerPerception cooldownEnded = generalFSM.CreatePerception<TimerPerception>(cooldown);
-        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
-
         generalFSM.CreateTransition("cooldown terminado", wanderState, cooldownEnded, workState);
+
+        PushPerception decisionTaken = generalFSM.CreatePerception<PushPerception>();
         generalFSM.CreateTransition("decision tomada", workState, decisionTaken, wanderState);
+
+        //Create supermachine
+
+        // States
+        State initialState = defaultFSM.CreateEntryState("idle");
+        State generalState = defaultFSM.CreateSubStateMachine("default", generalFSM);
+        State votingState = defaultFSM.CreateState("vote", Vote);
+
+        // Perceptions
+        Perception born = defaultFSM.CreatePerception<TimerPerception>(0.25f);
+        Perception voteCalled = defaultFSM.CreatePerception<ValuePerception>(() => vote == true);
+        Perception voteFinished = defaultFSM.CreatePerception<ValuePerception>(() => vote == false);
+
+
+        // Transitions
+        defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
+        generalFSM.CreateExitTransition("vote called from wander", wanderState, voteCalled, votingState);
+        generalFSM.CreateExitTransition("vote called from work", workState, voteCalled, votingState);
+        defaultFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
     }
 
-    private void CreateKillingUtilitySystem()
+    #endregion
+
+    #region EntryUSDataMethods
+
+    //Returns 1 if there's 0, 2 or more honest agents with the traitor (must not kill). Returns 0 if there's only 1 honest agents with the traitor (can kill)
+    private float Get2OrMoreAgentsInRoom()
     {
-        killingUS = new UtilitySystemEngine(true);
+        int agentsInRoom = thisAgent.NumberOfHonestAgentsInRoom();
+        if (agentsInRoom == 1)
+        {
+            thisAgent.SetVictim();
+            return 0f;
+        }
+        else
+            return 1f;
+    }
 
+    private float GetNumberOfAgentsInLastRoom()
+    {
+        return (float) thisAgent.NumberOfHonestAgentsInLastRoom();
+    }
+
+    //Returns 0 if a honest agent just left the room
+    private float GetAgentLeft()
+    {
+        if (thisAgent.GetAgentLeft())
+            return 0f;
+        else
+            return 1f;
+    }
+
+    #endregion
+
+    #region UtilityActionsMethods
+
+    private void Sabotage()
+    {        
+        spriteStateController.SetStateIcon("sabotage");
+        StartCoroutine(WaitSabotage());
+    }
+
+    private IEnumerator WaitSabotage()
+    {
+        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count));
+        yield return new WaitForSeconds(1f);
+        SceneController.instance.StartSabotage(TaskGenerator.instance.tasksCoords[taskSelected]);
+        generalFSM.Fire("decision tomada");
+    }
+
+    private void Kill()
+    {
+        spriteStateController.SetStateIcon("kill");
+        animator.SetBool("isRunning", true);
+
+        thisAgent.GetVictim().gameObject.GetComponent<NavMeshAgent>().speed = 0;
+        agent.speed *= 2;
+        agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
+        StartCoroutine(KillObjective());             
+    }
+
+    private IEnumerator KillObjective()
+    {
+        for (; ; )
+        {
+            if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 2.25f)
+            {
+                SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);
+                animator.SetBool("isRunning", false);
+                animator.SetBool("isKilling", true);                
+                generalFSM.Fire("decision tomada");
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+        generalFSM.Fire("decision tomada");
+    }
+
+    private void Pretend()
+    {
+        WalkToTask();  
+    }
+
+    #endregion
+
+    #region BTActions
+
+    private void WalkToTask()
+    {
+        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count));
+        currentTask = TaskGenerator.instance.tasksCoords[taskSelected];
+        agent.SetDestination(currentTask);
+        spriteStateController.SetStateIcon("go");
+
+        StartCoroutine(IsInObjective());
+    }
+
+    private IEnumerator IsInObjective()
+    {
+        for(;;)
+        {
+            if (Vector3.Distance(this.transform.position, currentTask) < 3.5)
+            {
+                Work();
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+    }
+
+    private void Work()
+    {
+        spriteStateController.SetStateIcon("work");
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isWorking", true);
+        StartCoroutine(TimerWork());
+    }
+
+    private IEnumerator TimerWork()
+    {
+        // Stops the agent until he finishes the task        
+        agent.speed = 0;
+        yield return new WaitForSeconds(timeWorking);
+        agent.speed = thisAgent.getSpeed();
+        currentTask = Vector3.zero;
+        animator.SetBool("isWorking", false);
+        generalFSM.Fire("decision tomada");
+    }
+
+    #endregion    
+
+    #region FSMActions
+
+    private void Wander()
+    {
+        spriteStateController.SetStateIcon("think");
+        agent.speed = thisAgent.getSpeed(); // Sets the default speed
+        
+        animator.SetBool("isWorking", false);
+        animator.SetBool("isRunning", false);
+        animator.SetBool("isKilling", false);
+        animator.SetBool("isWalking", true);
+
+        agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task     
+          
+    }
+
+    // Get Random Point on a Navmesh surface
+    private Vector3 GetRandomPoint(Vector3 center, float maxDistance)
+    {
+        // Get Random Point inside Sphere which position is center, radius is maxDistance
+        Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
+
+        NavMeshHit hit; // NavMesh Sampling Info Container
+
+        // from randomPos find a nearest point on NavMesh surface in range of maxDistance
+        NavMesh.SamplePosition(randomPos, out hit, maxDistance, NavMesh.AllAreas);
+
+        return hit.position;
+    }
+
+    private void Vote()
+    {
+        /*
+            Cuando se vota, todos los agentes se paralizan hasta que acabe la votaci�n.
+            Se muestra por pantalla el proceso de votaci�n a trav�s de una interfaz
+        */
+
+        // Dismisses his task
+        spriteStateController.SetStateIcon("vote");
+        currentTask = Vector3.zero;
+        agent.speed = 0;
+        agent.SetDestination(transform.position);
+
+        /*
+            Vote random agent (TO BE CHANGED)
+            _________________________________
+        */
+        // Random agent
+        int r = Random.Range(0, SceneController.instance.agents.Count);
+        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        //Debug.Log(honest.thisAgent.getAgentName());
+        //Debug.Log(ag.getAgentName());
+
+        // Votes the agent
+        SceneController.instance.VoteAgent(thisAgent, agVoted);
+
+        /*
+           _________________________________
+        */
+        spriteStateController.SetStateIcon("vote");
+        animator.SetBool("isRunning", false);
+        animator.SetBool("isKilling", false);
+        animator.SetBool("isWalking", false);
+    }
+
+    public void FireVote()
+    {
+        vote = true;
+    }
+
+    public void FireWander()
+    {
+        vote = false;
+    }
+
+    #endregion
+
+    private void TakeDecision()
+    {
         //Base factors (data received from the world)
-        Factor tasksCompleted = new LeafVariable(() => GetNumberOfTasksCompleted(), worldController.GetTotalTasks(), 0f);
-        Factor agentsInLastRoom = new LeafVariable(() => GetNumberOfAgentsInLastRoom(), worldController.GetTotalHonestAgents(), 0f);
+        float tasksCompleted = SceneController.instance.GetTasksDone() / SceneController.instance.GetTotalTasks();
+        float agentsInLastRoom = GetNumberOfAgentsInLastRoom() / SceneController.instance.GetTotalHonestAgents();
 
-        Factor killingPossibility = new LeafVariable(() => { return Mathf.Abs(Get2OrMoreAgentsInRoom() - 1); }, 1f, 0f);
-        Factor needToPretend = new LeafVariable(() => Get2OrMoreAgentsInRoom(), 1f, 0f); //Decisive factor
-        Factor fear2 = new LeafVariable(() => GetAgentLeft(), 1f, 0f);
+        float killingPossibility = Mathf.Abs(Get2OrMoreAgentsInRoom() - 1);
+        float needToPretend = Get2OrMoreAgentsInRoom(); //Decisive factor
+        float fear2 = GetAgentLeft();
 
         //Graph factors
-        Factor fear1 = new LinearCurve(agentsInLastRoom, -1, 1);
+        float fear1 = (-agentsInLastRoom) + 1;
 
         List<Point2D> points = new List<Point2D>();
         points.Add(new Point2D(0, 0));
@@ -78,10 +344,27 @@ public class TraitorBehaviour : MonoBehaviour
         points.Add(new Point2D(0.85f, 1));
         points.Add(new Point2D(1, 1));
 
-        Factor riskToLose = new LinearPartsCurve(tasksCompleted, points); //Decisive factor
+        float returnValue = 0.0f;
+        float x = tasksCompleted;
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            float xPoint = points[i].x;
+            if (i == 0 && x < xPoint) { returnValue = points[i].y; break; };
+            if ((i == points.Count - 1) && x > xPoint) { returnValue = points[i].y; break; };
+            if (x == xPoint) { returnValue = points[i].y; break; }
+
+            if (x > xPoint && x < points[i + 1].x)
+            {
+                returnValue = ((x - xPoint) / (points[i + 1].x - xPoint)) * (points[i + 1].y - points[i].y) + points[i].y;
+                break;
+            }
+        }
+
+        float riskToLose = returnValue; //Decisive factor
 
         //Fusion factors
-        List<Factor> factors = new List<Factor>();
+        List<float> factors = new List<float>();
         factors.Add(fear1);
         factors.Add(fear2);
 
@@ -89,7 +372,15 @@ public class TraitorBehaviour : MonoBehaviour
         weights.Add(0.5f);
         weights.Add(0.5f);
 
-        Factor fearToBeDiscovered = new WeightedSumFusion(factors, weights);
+        float sum = 0.0f;
+        for (int i = 0; i < factors.Count; i++)
+        {
+            float factor = factors[i];
+
+            sum += factor * weights[i];
+        }
+
+        float fearToBeDiscovered = sum;
 
         factors.Clear();
         factors.Add(riskToLose);
@@ -101,106 +392,31 @@ public class TraitorBehaviour : MonoBehaviour
         weights.Add(0.3f);
         weights.Add(0.5f);
 
-        Factor killingNeed = new WeightedSumFusion(factors, weights); //Decisive factor
+        sum = 0.0f;
+        for (int i = 0; i < factors.Count; i++)
+        {
+            float factor = factors[i];
 
-        //Actions and decisions
-        killingUS.CreateUtilityAction("sabotear", () => Sabotage(), riskToLose);
-        killingUS.CreateUtilityAction("asesinar", () => Kill(), killingNeed);
-        killingUS.CreateSubBehaviour("fingir", needToPretend, pretendBT);
+            sum += factor * weights[i];
+        }
+
+        float killingNeed = sum; //Decisive factor
+
+        float[] decisiveFactors = { needToPretend, riskToLose, killingNeed };
+
+        float decision = Mathf.Max(decisiveFactors);
+
+        if (decision == killingNeed)
+        {
+            Kill();
+        }        
+        else if (decision == riskToLose && !activeSabotage)
+        {
+            Sabotage();
+        }
+        else if (decision == needToPretend)
+        {
+            Pretend();
+        }  
     }
-
-    private void CreatePretendBehaviourTree()
-    {
-        pretendBT = new BehaviourTreeEngine(true);
-
-        SequenceNode rootNode = pretendBT.CreateSequenceNode("root", false);
-
-        LeafNode walkToTask = pretendBT.CreateLeafNode("walk to task", () => WalkToTask(), () => isInObjective());
-        LeafNode pretendWork = pretendBT.CreateLeafNode("prtend work", () => Work(), () => finishedWorking());
-
-        rootNode.AddChild(walkToTask);
-        rootNode.AddChild(pretendWork);
-    }
-
-    #endregion
-
-    #region EntryUSDataMethods
-
-    private float GetNumberOfTasksCompleted()
-    {
-        return 0f;
-    }
-
-    //Returns 1 if there's 2 or more honest agents with the traitor
-    private float Get2OrMoreAgentsInRoom()
-    {
-        return 0f;
-    }
-
-    private float GetNumberOfAgentsInLastRoom()
-    {
-        return 0f;
-    }
-
-    //Returns 0 if a honest agent just left the room
-    private float GetAgentLeft()
-    {
-        return 0f;
-    }
-
-    #endregion
-
-    #region UtilityActionsMethods
-
-    private void Sabotage()
-    {
-        
-    }
-
-    private void Kill()
-    {
-
-    }
-
-    private void Pretend()
-    {
-
-    }
-
-    #endregion
-
-    #region BTActions
-
-    private void WalkToTask()
-    {
-
-    }
-
-    private void Work()
-    {
-
-    }
-
-    #endregion
-
-    #region BTEvaluationFunctions
-    private ReturnValues isInObjective()
-    {
-        return ReturnValues.Succeed;
-    }
-
-    private ReturnValues finishedWorking()
-    {
-        return ReturnValues.Succeed;
-    }
-    #endregion
-
-    #region FSMActions
-
-    private void Wander()
-    {
-
-    }
-
-    #endregion
 }
