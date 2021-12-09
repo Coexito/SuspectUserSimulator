@@ -261,10 +261,27 @@ public class TraitorBehaviour : MonoBehaviour
         */
 
         // Dismisses his task
+        spriteStateController.SetStateIcon("vote");
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
-        spriteStateController.SetStateIcon("vote");
+
+        /*
+            Vote random agent (TO BE CHANGED)
+            _________________________________
+        */
+        // Random agent
+        int r = Random.Range(0, SceneController.instance.agents.Count);
+        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        //Debug.Log(honest.thisAgent.getAgentName());
+        //Debug.Log(ag.getAgentName());
+
+        // Votes the agent
+        SceneController.instance.VoteAgent(thisAgent, agVoted);
+
+        /*
+           _________________________________
+        */
     }
 
     public void FireVote()

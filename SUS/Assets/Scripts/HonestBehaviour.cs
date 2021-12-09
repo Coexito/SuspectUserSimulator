@@ -190,7 +190,6 @@ public class HonestBehaviour : MonoBehaviour
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
-        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
 
         /*
             Vote random agent (TO BE CHANGED)
