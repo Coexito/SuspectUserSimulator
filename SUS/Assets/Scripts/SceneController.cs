@@ -39,6 +39,7 @@ public class SceneController : MonoBehaviour
     private TextMeshProUGUI voteLogs;
     private GameObject gameFinishPanel;
     private TextMeshProUGUI resultsLogs;
+    private GameObject finishVotationBtn;
     private TextMeshProUGUI honestHUDNumber, traitorHUDNumber, tasksHUDNumber;
     
     void Awake()
@@ -62,6 +63,7 @@ public class SceneController : MonoBehaviour
 
         gameFinishPanel = canvas.transform.FindDeepChild("GameFinishesPanel").gameObject;
         resultsLogs = canvas.transform.FindDeepChild("ResultsLog").GetComponent<TextMeshProUGUI>();
+        finishVotationBtn = canvas.transform.FindDeepChild("FinishVotationBtn").gameObject;
 
         honestHUDNumber = canvas.transform.FindDeepChild("HonestNumberTXT").GetComponent<TextMeshProUGUI>();
         traitorHUDNumber = canvas.transform.FindDeepChild("TraitorNumberTXT").GetComponent<TextMeshProUGUI>();
@@ -214,6 +216,7 @@ public class SceneController : MonoBehaviour
     {
         voteLogs.SetText("");
         votePanel.SetActive(true);  // Opens the canvas
+        finishVotationBtn.SetActive(false);
 
         foreach (GameObject ag in agents)
         {
@@ -232,6 +235,7 @@ public class SceneController : MonoBehaviour
         // Ejecs the agent and writes in the logs
         EjectAgent(agent);
         voteLogs.text += "\n" + agent.getAgentName() + " was the most voted agent.\n\n";
+        finishVotationBtn.SetActive(true);
 
         // Now the user has to finish the votation by pressing the button...
         // (executes FinishVotation)
