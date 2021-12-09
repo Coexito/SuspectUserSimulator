@@ -21,6 +21,7 @@ public class TraitorBehaviour : MonoBehaviour
     [SerializeField] private float timeWorking = 5f;
 
     private bool vote = false;
+    private bool activeSabotage = false;
     
     private SpriteStateController spriteStateController; // To change the state sprite
 
@@ -63,6 +64,16 @@ public class TraitorBehaviour : MonoBehaviour
     private void Start() 
     {
         SetTextName();
+    }
+
+    public void StartSabotage()
+    {
+        activeSabotage = true;
+    }
+
+    public void EndSabotage()
+    {
+        activeSabotage = false;
     }
 
     private void SetTextName()
@@ -144,6 +155,14 @@ public class TraitorBehaviour : MonoBehaviour
     private void Sabotage()
     {        
         spriteStateController.SetStateIcon("sabotage");
+        StartCoroutine(WaitSabotage());
+    }
+
+    private IEnumerator WaitSabotage()
+    {
+        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count));
+        yield return new WaitForSeconds(1f);
+        SceneController.instance.StartSabotage(TaskGenerator.instance.tasksCoords[taskSelected]);
         generalFSM.Fire("decision tomada");
     }
 
@@ -171,6 +190,7 @@ public class TraitorBehaviour : MonoBehaviour
             }
             yield return new WaitForSeconds(.1f);
         }
+        generalFSM.Fire("decision tomada");
     }
 
     private void Pretend()
@@ -184,7 +204,7 @@ public class TraitorBehaviour : MonoBehaviour
 
     private void WalkToTask()
     {
-        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count - 1));
+        int taskSelected = Mathf.RoundToInt(Random.Range(0, TaskGenerator.instance.tasksCoords.Count));
         currentTask = TaskGenerator.instance.tasksCoords[taskSelected];
         agent.SetDestination(currentTask);
         spriteStateController.SetStateIcon("go");
@@ -263,9 +283,27 @@ public class TraitorBehaviour : MonoBehaviour
         */
 
         // Dismisses his task
+        spriteStateController.SetStateIcon("vote");
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
+
+        /*
+            Vote random agent (TO BE CHANGED)
+            _________________________________
+        */
+        // Random agent
+        int r = Random.Range(0, SceneController.instance.agents.Count);
+        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        //Debug.Log(honest.thisAgent.getAgentName());
+        //Debug.Log(ag.getAgentName());
+
+        // Votes the agent
+        SceneController.instance.VoteAgent(thisAgent, agVoted);
+
+        /*
+           _________________________________
+        */
         spriteStateController.SetStateIcon("vote");
         animator.SetBool("isRunning", false);
         animator.SetBool("isKilling", false);
@@ -368,17 +406,17 @@ public class TraitorBehaviour : MonoBehaviour
 
         float decision = Mathf.Max(decisiveFactors);
 
-        if(decision == needToPretend)
-        {
-            Pretend();
-        }
-        else if (decision == killingNeed)
+        if (decision == killingNeed)
         {
             Kill();
-        }
-        else if (decision == riskToLose)
+        }        
+        else if (decision == riskToLose && !activeSabotage)
         {
             Sabotage();
         }
+        else if (decision == needToPretend)
+        {
+            Pretend();
+        }  
     }
 }

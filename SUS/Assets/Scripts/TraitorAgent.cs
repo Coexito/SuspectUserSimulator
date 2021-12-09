@@ -97,5 +97,24 @@ public class TraitorAgent : Agent
         if (behaviour)
             behaviour.FireWander();
     }
-    
+
+    public override void StartSabotage(Vector3 sabotagePos)
+    {
+        base.StartSabotage(sabotagePos);
+
+        TraitorBehaviour behaviour = GetComponent<TraitorBehaviour>();
+
+        if (behaviour)
+            behaviour.StartSabotage();
+    }
+
+    public override void EndSabotage()
+    {
+        base.EndSabotage();
+
+        TraitorBehaviour behaviour = GetComponent<TraitorBehaviour>();
+
+        if (behaviour)
+            behaviour.EndSabotage();
+    }
 }

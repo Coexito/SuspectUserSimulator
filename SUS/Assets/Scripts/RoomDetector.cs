@@ -4,22 +4,19 @@ using UnityEngine;
 public class RoomDetector : MonoBehaviour
 {
     public List<Agent> agentsInside;
-    Agent newAg;
+    public int roomIndex;
+
     // Start is called before the first frame update
     void Start()
     {
         agentsInside = new List<Agent>();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        //roomIndex = this.gameObject.name();
     }
     
     //When an agent enters into a room
     private void OnTriggerEnter(Collider other)
     {
+
         if (other.gameObject.GetComponent<Agent>() != null)
         {
             other.gameObject.GetComponent<Agent>().SetActualRoom(this);
@@ -29,13 +26,15 @@ public class RoomDetector : MonoBehaviour
             addInsideAgents(other.gameObject.GetComponent<Agent>());
             //Adding new agent to the room list
             agentsInside.Add(other.gameObject.GetComponent<Agent>());
+            //Adding the roomIndex
+            addRoomsInfo(other.gameObject.GetComponent<Agent>());
         }
 
         //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
         other.gameObject.GetComponent<Agent>().clearList();
         other.gameObject.GetComponent<Agent>().getList();
         foreach (Agent ag in agentsInside)
-        { 
+        {
             ag.clearList();
             ag.getList();
         }
@@ -49,8 +48,9 @@ public class RoomDetector : MonoBehaviour
             removeInfoAllAgents(other.gameObject.GetComponent<Agent>());
             agentsInside.Remove(other.gameObject.GetComponent<Agent>());
             updateRoomsDictionary(other.gameObject.GetComponent<Agent>());
+            UpdateRoomInfo(other.gameObject.GetComponent<Agent>());
         }
-        //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
+        ////BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE: D
         other.gameObject.GetComponent<Agent>().clearList();
         other.gameObject.GetComponent<Agent>().getList();
         foreach (Agent ag in agentsInside)
@@ -60,7 +60,7 @@ public class RoomDetector : MonoBehaviour
         }
     }
 
-    public void AgentKilledInRoom(HonestAgent victim)
+    public void AgentKilledInRoom(Agent victim)
     {
         removeInfoAllAgents(victim);
         agentsInside.Remove(victim);
@@ -71,7 +71,7 @@ public class RoomDetector : MonoBehaviour
     //Add the incoming agent to all agents inside the room
     private void setInfoAllAgents(Agent agentInside)
     {
-        foreach(Agent ag in agentsInside)
+        foreach (Agent ag in agentsInside)
         {
             ag.agentsInTheRoom.Add(agentInside.getAgentName(), agentInside);
         }
@@ -80,7 +80,7 @@ public class RoomDetector : MonoBehaviour
     //Delete the exit agent from all agents that are inside the room
     private void removeInfoAllAgents(Agent agentInside)
     {
-        foreach(Agent ag in agentsInside)
+        foreach (Agent ag in agentsInside)
         {
             if (agentInside is HonestAgent)
             {
@@ -89,20 +89,14 @@ public class RoomDetector : MonoBehaviour
             }
 
             ag.agentsInTheRoom.Remove(agentInside.getAgentName());
-            agentInside.clearList();
-            agentInside.getList();
-            ag.clearList();
-            ag.getList();
         }
     }
 
     //Add all agents inside the room to the incoming agent
     private void addInsideAgents(Agent incomingAgent)
     {
-        foreach(Agent ag in agentsInside)
-        {
+        foreach (Agent ag in agentsInside)
             incomingAgent.agentsInTheRoom.Add(ag.getAgentName(), ag);
-        }
     }
 
     //Adding all the info to the last 2 rooms.
@@ -111,7 +105,7 @@ public class RoomDetector : MonoBehaviour
         //Clear agentsInThe2Room
         exitAgent.agentsInThe2Room.Clear();
         //Copy everything from agentsInThe1Room to agentsInThe2Room
-        foreach (KeyValuePair<string,Agent> ag in exitAgent.agentsInThe1Room)
+        foreach (KeyValuePair<string, Agent> ag in exitAgent.agentsInThe1Room)
         {
             exitAgent.agentsInThe2Room.Add(ag.Key, (Agent)ag.Value);
         }
@@ -126,4 +120,14 @@ public class RoomDetector : MonoBehaviour
         exitAgent.agentsInTheRoom.Clear();
     }
 
+    private void addRoomsInfo(Agent incomingAgent)
+    {
+        incomingAgent.rooms[0] = roomIndex;
+    }
+    private void UpdateRoomInfo(Agent exitAgent)
+    {
+        exitAgent.rooms[2] = exitAgent.rooms[1];
+        exitAgent.rooms[1] = exitAgent.rooms[0];
+        
+    }
 }

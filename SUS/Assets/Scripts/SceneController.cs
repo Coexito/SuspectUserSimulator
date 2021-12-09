@@ -49,6 +49,8 @@ public class SceneController : MonoBehaviour
         availableTasks = new List<Vector3>();
         agentsWaitingForTask = new List<HonestBehaviour>();
         votesForAgents = new List<Agent>();
+        canvas = GameObject.Find("Canvas");
+        agents = new List<GameObject>();
 
         // Gets the UI elements
         canvas.SetActive(true);
@@ -68,6 +70,7 @@ public class SceneController : MonoBehaviour
     private void Start() 
     {
         SpawnAgents();
+        setAgentsInfo();
         votePanel.SetActive(false);
         gameFinishPanel.SetActive(false);
     }
@@ -170,18 +173,6 @@ public class SceneController : MonoBehaviour
         }
     }
 
-    public void KillAgent(GameObject ag)
-    {
-        ag.GetComponent<Agent>().Die();
-        agents.Remove(ag);
-
-        if(ag.GetComponent<Agent>() is HonestAgent)
-        {
-            agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
-            totalHonestAgents--;
-        }
-    }
-
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
         // Get Random Point inside Sphere which position is center, radius is maxDistance
         Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
@@ -196,6 +187,18 @@ public class SceneController : MonoBehaviour
 
     #endregion
 
+    public void StartSabotage(Vector3 sabotagePos)
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().StartSabotage(sabotagePos);
+    }
+
+    public void EndSabotage()
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().EndSabotage();
+    }
+
     #region Voting functions
     public IEnumerator StartVotation()
     {
@@ -203,7 +206,12 @@ public class SceneController : MonoBehaviour
         votePanel.SetActive(true);  // Opens the canvas
 
         foreach (GameObject ag in agents)
+        {
             ag.GetComponent<Agent>().StartVote();
+            /////////////////////////////////////////////////////////////////////////////// CAMBIAR 1 POR LA SALA
+            if (ag.GetComponent<HonestAgent>() != null)
+                ag.GetComponent<HonestAgent>().DecideVote(2);
+        }
             
         yield return new WaitForSeconds(0.5f);
 
@@ -258,12 +266,15 @@ public class SceneController : MonoBehaviour
         return a;
     }
 
+
+
     private void EjectAgent(Agent ag)
     {
         if(ag != null)
         {
             agents.Remove(ag.gameObject);
-
+            deleteAgentSus(ag.GetComponent<Agent>());
+            ag.GetActualRoom().AgentKilledInRoom(ag);
             if(ag is HonestAgent)
             {
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
@@ -273,8 +284,6 @@ public class SceneController : MonoBehaviour
             {
                 totalTraitorAgents--;
             }
-                
-
             Destroy(ag.gameObject);
         }
         
@@ -285,12 +294,24 @@ public class SceneController : MonoBehaviour
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().FinishVote();
 
-
         votePanel.SetActive(false);
         votesForAgents.Clear();
     }
 
     #endregion
+
+    public void KillAgent(GameObject ag)
+    {
+        voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
+        ag.GetComponent<Agent>().Die();
+        agents.Remove(ag);
+        deleteAgentSus(ag.GetComponent<Agent>());
+
+        if (ag.GetComponent<Agent>() is HonestAgent)
+        {
+            agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
+        }
+    }
 
     #region Tasks functions
     public void TakeTask(Vector3 task)
@@ -350,5 +371,25 @@ public class SceneController : MonoBehaviour
         return totalTraitorAgents;
     }
 
+    #endregion
+
+    #region SuspiciousInfo
+    private void setAgentsInfo()
+    {
+        foreach(GameObject ag in agents)
+        {
+            if(ag.GetComponent<HonestAgent>()!=null)
+                ag.GetComponent<HonestAgent>().GetAllAgents(agents);
+        }
+    }
+
+    private void deleteAgentSus(Agent sus)
+    {
+        foreach (GameObject ag in agents)
+        {
+            if (ag.GetComponent<HonestAgent>() != null)
+                ag.GetComponent<HonestAgent>().removeAgent(sus);
+        }
+    }
     #endregion
 }

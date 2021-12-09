@@ -3076,7 +3076,8 @@ GameObject:
   - component: {fileID: 7449881045837147736}
   - component: {fileID: 7449881045837147737}
   - component: {fileID: 8243349585091888000}
-  - component: {fileID: 8012445857614322757}
+  - component: {fileID: -1741423623275504808}
+  - component: {fileID: 7641578924203613700}
   m_Layer: 8
   m_Name: HonestAgent
   m_TagString: Honest
@@ -3153,6 +3154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 51bea79c4290bf441aa4219885011cef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rooms: 000000000000000000000000
   agentsInTheRoomList: []
   agentsInTheRoomList1: []
   agentsInTheRoomList2: []
@@ -3197,7 +3199,7 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!54 &8012445857614322757
+--- !u!54 &-1741423623275504808
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3213,6 +3215,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!136 &7641578924203613700
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7755799471099007765}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.5
+  m_Height: 1
+  m_Direction: 1
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7868662817662614132
 GameObject:
   m_ObjectHideFlags: 0
