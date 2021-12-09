@@ -211,22 +211,10 @@ public class HonestBehaviour : MonoBehaviour
         agent.speed = 0;
         agent.SetDestination(transform.position);
 
-        /*
-            Vote random agent (TO BE CHANGED)
-            _________________________________
-        */
-        // Random agent
         Agent agVoted=thisAgent.GetMostSuspiciousAgent();
-
-        //Debug.Log(honest.thisAgent.getAgentName());
-        //Debug.Log(ag.getAgentName());
 
         // Votes the agent
         SceneController.instance.VoteAgent(thisAgent, agVoted);
-
-        /*
-           _________________________________
-        */
     }
 
     public void FireVote()
@@ -252,6 +240,7 @@ public class HonestBehaviour : MonoBehaviour
         thisAgent.GetActualRoom().AgentKilledInRoom((HonestAgent) thisAgent);        
         animator.SetTrigger("Die");
         agent.SetDestination(transform.position);
+        SceneController.instance.DecreaseTotalHonestAgents();
     }
 
     public void FireDie()
@@ -333,6 +322,8 @@ public class HonestBehaviour : MonoBehaviour
     private IEnumerator FixingSabotage()
     {      
         agent.speed = 0;
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isWorking", true);
         yield return new WaitForSeconds(timeWorking);
         SceneController.instance.EndSabotage();
         agent.speed = thisAgent.getSpeed();

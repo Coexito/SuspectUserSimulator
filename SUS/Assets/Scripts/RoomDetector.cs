@@ -117,6 +117,7 @@ public class RoomDetector : MonoBehaviour
     }
     private void UpdateRoomInfo(Agent exitAgent)
     {
-        exitAgent.rooms.Dequeue();
+        if(exitAgent.rooms.Count != 0)
+            exitAgent.rooms.Dequeue();
     }
 }

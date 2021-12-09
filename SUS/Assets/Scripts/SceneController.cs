@@ -20,20 +20,22 @@ public class SceneController : MonoBehaviour
     private float totalTraitorAgents;
     private int tasksDone;
 
-    float secondsToLooseOnSabotage = 15f;
+    float secondsToLooseOnSabotage = 30f;
     [HideInInspector] public bool sabotageHappening;
     private bool gameWasSabotaged = false;    
     private bool activeSabotage = false;
 
     // Data structures
     MainMenuData dataMenu;
-
     [HideInInspector] public List<GameObject> agents;
     private List<HonestBehaviour> agentsWaitingForTask;
     [HideInInspector] public List<Vector3> availableTasks;
     private List<Agent> votesForAgents;
 
     [HideInInspector] public Vector3 EMERGENCY_POINT;
+    private Light light;
+    private string yellow = "#DDD09E";
+    private string red = "#D44117";
 
     // UI variables
     [SerializeField] private GameObject canvas;
@@ -58,6 +60,8 @@ public class SceneController : MonoBehaviour
         votesForAgents = new List<Agent>();
         agents = new List<GameObject>();
 
+        light = GameObject.Find("DirectionalLight").GetComponent<Light>();
+
         // Gets the UI elements
         canvas.SetActive(true);
         votePanel = canvas.transform.FindDeepChild("VotePanel").gameObject;
@@ -78,6 +82,10 @@ public class SceneController : MonoBehaviour
         setAgentsInfo();
         votePanel.SetActive(false);
         gameFinishPanel.SetActive(false);
+
+        Color color;
+        if(ColorUtility.TryParseHtmlString(yellow, out color)) // Sets the light color
+            light.color = color;
     }
 
     private void Update() 
@@ -195,6 +203,11 @@ public class SceneController : MonoBehaviour
             ag.GetComponent<Agent>().StartSabotage(sabotagePos);
 
         activeSabotage = true;
+
+        Color color;
+        if(ColorUtility.TryParseHtmlString(red, out color)) // Sets the alarm light color
+            light.color = color;
+
         StartCoroutine(SabotageHappening());
     }
 
@@ -209,6 +222,11 @@ public class SceneController : MonoBehaviour
     public void EndSabotage()
     {
         activeSabotage = false;
+        StopCoroutine(SabotageHappening());
+
+        Color color;
+        if(ColorUtility.TryParseHtmlString(yellow, out color)) // Sets the alarm light color
+            light.color = color;
 
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().EndSabotage();
@@ -226,13 +244,13 @@ public class SceneController : MonoBehaviour
         {
             if (ag.GetComponent<HonestAgent>() != null)
             {
-                ag.GetComponent<HonestAgent>().SetLooking4Corpses(false);
+                ag.GetComponent<HonestAgent>().SetLooking4Corpses(true);
                 ag.GetComponent<HonestAgent>().SetCorpseFound(null);
                 ag.GetComponent<HonestAgent>().SetCorpseRoom(-1);
             }
 
             ag.GetComponent<Agent>().StartVote();
-            /////////////////////////////////////////////////////////////////////////////// CAMBIAR 1 POR LA SALA
+
             if (ag.GetComponent<HonestAgent>() != null)
                 ag.GetComponent<HonestAgent>().DecideVote(cRoom);
         }
@@ -247,6 +265,9 @@ public class SceneController : MonoBehaviour
         EjectAgent(agent);
         voteLogs.text += "\n" + agent.getAgentName() + " was the most voted agent.\n\n";
         finishVotationBtn.SetActive(true);
+
+        if(agent is HonestAgent)
+            DecreaseTotalHonestAgents();
 
         //Ejects the corpse
         EjectAgent(corpse);
@@ -306,7 +327,6 @@ public class SceneController : MonoBehaviour
             if (ag is HonestAgent)
             {
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
-                totalHonestAgents--;
             }
             else if(ag is TraitorAgent)
             {
@@ -336,10 +356,8 @@ public class SceneController : MonoBehaviour
         deleteAgentSus(ag.GetComponent<Agent>());
 
         if (ag.GetComponent<Agent>() is HonestAgent)
-        {
             agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
-            totalHonestAgents--;
-        }
+
     }
 
     #region Tasks functions
@@ -388,6 +406,11 @@ public class SceneController : MonoBehaviour
     public float GetTotalHonestAgents()
     {
         return totalHonestAgents;
+    }
+
+    public void DecreaseTotalHonestAgents()
+    {
+        totalHonestAgents --;
     }
 
     public float GetTasksDone()

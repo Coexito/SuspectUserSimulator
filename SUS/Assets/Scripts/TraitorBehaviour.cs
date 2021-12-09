@@ -178,6 +178,7 @@ public class TraitorBehaviour : MonoBehaviour
             agent.speed *= 2;
             agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
             StartCoroutine(KillObjective());
+            notifyKillingToRoomAgents();
         }
         else
         {
@@ -197,7 +198,7 @@ public class TraitorBehaviour : MonoBehaviour
             }
             yield return new WaitForSeconds(.1f);
         }
-        notifyKillingToRoomAgents();
+    
         SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);
         generalFSM.Fire("decision tomada");
         
@@ -308,21 +309,20 @@ public class TraitorBehaviour : MonoBehaviour
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
+       
+        Agent agVoted;
+        do
+        {
+            // Random agent
+            int r = Random.Range(0, SceneController.instance.agents.Count);
+            agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
 
-        /*
-            Vote random agent (TO BE CHANGED)
-            _________________________________
-        */
-        // Random agent
-        int r = Random.Range(0, SceneController.instance.agents.Count);
-        Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
+        } while(agVoted is TraitorAgent);
+
 
         // Votes the agent
         SceneController.instance.VoteAgent(thisAgent, agVoted);
 
-        /*
-           _________________________________
-        */
         spriteStateController.SetStateIcon("vote");
         animator.SetBool("isRunning", false);
         animator.SetBool("isKilling", false);

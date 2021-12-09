@@ -51,7 +51,7 @@ public class HonestAgent : Agent
                                 if (angleToC <= 60)
                                 {
                                     corpseFound = corpse;
-                                    corpseRoom = rooms[0];                                    
+                                    corpseRoom = rooms.Peek();                                    
                                     looking4Corpse = false;
                                     break;
                                 }
