@@ -128,8 +128,6 @@ public class SceneController : MonoBehaviour
         votePanel.SetActive(false);
         resultsLogs.SetText(finalMessage);
         gameFinishPanel.SetActive(true);
-
-        Time.timeScale = 0;
     }
 
     public void ResetSimulation()

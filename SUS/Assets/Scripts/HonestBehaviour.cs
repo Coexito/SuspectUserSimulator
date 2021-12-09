@@ -64,10 +64,8 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM.Update();
         generalFSM.Update();
 
-        if(agent.speed == 0)    // If the agent stays in place
-        {
-            animator.SetBool("Idle", true);
-        }
+        if(GetComponent<Rigidbody>().velocity == Vector3.zero)    // If the agent stays in place
+            animator.SetBool("isWalking", false);
             
     }
 
