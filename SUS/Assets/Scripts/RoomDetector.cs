@@ -4,11 +4,13 @@ using UnityEngine;
 public class RoomDetector : MonoBehaviour
 {
     public List<Agent> agentsInside;
+    public int roomIndex;
 
     // Start is called before the first frame update
     void Start()
     {
         agentsInside = new List<Agent>();
+        //roomIndex = this.gameObject.name();
     }
     
     //When an agent enters into a room
@@ -24,6 +26,8 @@ public class RoomDetector : MonoBehaviour
             addInsideAgents(other.gameObject.GetComponent<Agent>());
             //Adding new agent to the room list
             agentsInside.Add(other.gameObject.GetComponent<Agent>());
+            //Adding the roomIndex
+            addRoomsInfo(other.gameObject.GetComponent<Agent>());
         }
 
         //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
@@ -44,6 +48,7 @@ public class RoomDetector : MonoBehaviour
             removeInfoAllAgents(other.gameObject.GetComponent<Agent>());
             agentsInside.Remove(other.gameObject.GetComponent<Agent>());
             updateRoomsDictionary(other.gameObject.GetComponent<Agent>());
+            UpdateRoomInfo(other.gameObject.GetComponent<Agent>());
         }
         ////BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE: D
         other.gameObject.GetComponent<Agent>().clearList();
@@ -115,4 +120,14 @@ public class RoomDetector : MonoBehaviour
         exitAgent.agentsInTheRoom.Clear();
     }
 
+    private void addRoomsInfo(Agent incomingAgent)
+    {
+        incomingAgent.rooms[0] = roomIndex;
+    }
+    private void UpdateRoomInfo(Agent exitAgent)
+    {
+        exitAgent.rooms[2] = exitAgent.rooms[1];
+        exitAgent.rooms[1] = exitAgent.rooms[0];
+        
+    }
 }

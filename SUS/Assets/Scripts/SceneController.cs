@@ -275,7 +275,7 @@ public class SceneController : MonoBehaviour
         {
             agents.Remove(ag.gameObject);
             deleteAgentSus(ag.GetComponent<Agent>());
-            if (ag is HonestAgent)
+            if (ag is HonestAgent) { 
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
                 totalHonestAgents--;
             }
@@ -283,8 +283,6 @@ public class SceneController : MonoBehaviour
             {
                 totalTraitorAgents--;
             }
-                
-
             Destroy(ag.gameObject);
         }
         
@@ -295,14 +293,13 @@ public class SceneController : MonoBehaviour
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().FinishVote();
 
-
         votePanel.SetActive(false);
         votesForAgents.Clear();
     }
 
     #endregion
 
-    private void KillAgent(GameObject ag)
+    public void KillAgent(GameObject ag)
     {
         voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
         ag.GetComponent<Agent>().Die();

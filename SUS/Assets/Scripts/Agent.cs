@@ -11,7 +11,7 @@ public class Agent : MonoBehaviour
     public Dictionary<string, Agent> sussyAgents;      // Agents suspected (to vote them later)
     private string agentName;
 
-    public int[] rooms = new int[3];
+    public int[] rooms;
     [SerializeField] private List<string> agentsInTheRoomList;
     [SerializeField] private List<string> agentsInTheRoomList1;
     [SerializeField] private List<string> agentsInTheRoomList2;
@@ -26,15 +26,13 @@ public class Agent : MonoBehaviour
         agentsInTheRoomList = new List<string>();
         agentsInTheRoomList2 = new List<string>();
         agentsInTheRoomList1 = new List<string>();
-        rooms[0] = 0;
-        rooms[1] = 1;
-        rooms[2] = 2;
+        rooms = new int[3];
         // agentName = "Agent" + Random.Range(0, 10000);
 
         //this.speed = 5f;
     }
     
-    }
+    
         
     public void SetActualRoom(RoomDetector dt)
     {
