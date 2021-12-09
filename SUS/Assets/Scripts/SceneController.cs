@@ -13,34 +13,32 @@ public class SceneController : MonoBehaviour
     [SerializeField] private GameObject traitorPrefab;
 
     // World variables
-    [SerializeField] [Header("Total tasks needed to win:")] private float TOTAL_TASKS = 10f; //Number of tasks needed to be done by honest agents
+    [Header("Total tasks needed to win:")] private float TOTAL_TASKS = 10f; //Number of tasks needed to be done by honest agents
 
     [Header("Total agents:")]
     [SerializeField] private float totalHonestAgents = 5f; 
     
     [SerializeField] private float totalTraitorAgents = 2f;
 
-    [SerializeField] private int tasksDone = 0;
+    private int tasksDone = 0;
 
     [HideInInspector] public bool sabotageHappening;
     private bool gameWasSabotaged = false;    
 
     // Data structures
-    public List<GameObject> agents;
-    [SerializeField] private List<HonestBehaviour> agentsWaitingForTask;
-    public List<Vector3> availableTasks;
-    [SerializeField] private List<Agent> votesForAgents;
+    [HideInInspector] public List<GameObject> agents;
+    private List<HonestBehaviour> agentsWaitingForTask;
+    [HideInInspector] public List<Vector3> availableTasks;
+    private List<Agent> votesForAgents;
 
-    public Vector3 EMERGENCY_POINT;
+    [HideInInspector] public Vector3 EMERGENCY_POINT;
 
     // UI variables
     [SerializeField] private GameObject canvas;
-    [SerializeField] private GameObject votePanel;
+    private GameObject votePanel;
     private TextMeshProUGUI voteLogs;
-
-    [SerializeField] private GameObject gameFinishPanel;
+    private GameObject gameFinishPanel;
     private TextMeshProUGUI resultsLogs;
-
     private TextMeshProUGUI honestHUDNumber, traitorHUDNumber, tasksHUDNumber;
     
     void Awake()
@@ -154,23 +152,32 @@ public class SceneController : MonoBehaviour
     #region Agents
     private void SpawnAgents()
     {
-        for(int i = 0; i < totalHonestAgents; i++)
+        try 
         {
-            GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            string name = "Agent" + (i+1);
-            h.name = name;
-            h.GetComponent<HonestAgent>().setAgentName(name);
-            agents.Add(h);
+            for(int i = 0; i < totalHonestAgents; i++)
+            {
+                GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+                string name = "Agent" + (i+1);
+                h.name = name;
+                h.GetComponent<HonestAgent>().setAgentName(name);
+                agents.Add(h);
+            }
         }
+        catch(UnassignedReferenceException e) { Debug.Log("Error spawning an honest agent."); }
 
-        for (int i = 0; i < totalTraitorAgents; i++)
+        try
         {
-            GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-            string name = "Traitor" + (i+1);
-            t.name = name;
-            t.GetComponent<TraitorAgent>().setAgentName(name);
-            agents.Add(t);
+            for (int i = 0; i < totalTraitorAgents; i++)
+            {
+                GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
+                string name = "Traitor" + (i+1);
+                t.name = name;
+                t.GetComponent<TraitorAgent>().setAgentName(name);
+                agents.Add(t);
+            }
         }
+        catch(UnassignedReferenceException e) { Debug.Log("Error spawning a traitor agent."); }
+        
     }
 
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
@@ -221,7 +228,7 @@ public class SceneController : MonoBehaviour
 
         // Ejecs the agent and writes in the logs
         EjectAgent(agent);
-        voteLogs.text += "\n\n" + agent.getAgentName() + " was the most voted agent.\n";
+        voteLogs.text += "\n" + agent.getAgentName() + " was the most voted agent.\n\n";
 
         // Now the user has to finish the votation by pressing the button...
         // (executes FinishVotation)
