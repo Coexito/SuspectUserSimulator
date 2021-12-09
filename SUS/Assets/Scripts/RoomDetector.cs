@@ -17,6 +17,7 @@ public class RoomDetector : MonoBehaviour
 
         if (other.gameObject.GetComponent<Agent>() != null)
         {
+            other.gameObject.GetComponent<Agent>().SetActualRoom(this);
             //Adding new agent to all inside room agents
             setInfoAllAgents(other.gameObject.GetComponent<Agent>());
             //Adding all agents inside the room to the agent.
@@ -24,6 +25,7 @@ public class RoomDetector : MonoBehaviour
             //Adding new agent to the room list
             agentsInside.Add(other.gameObject.GetComponent<Agent>());
         }
+
         //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
         other.gameObject.GetComponent<Agent>().clearList();
         other.gameObject.GetComponent<Agent>().getList();
@@ -53,6 +55,13 @@ public class RoomDetector : MonoBehaviour
         }
     }
 
+    public void AgentKilledInRoom(HonestAgent victim)
+    {
+        removeInfoAllAgents(victim);
+        agentsInside.Remove(victim);
+        updateRoomsDictionary(victim);
+    }
+
 
     //Add the incoming agent to all agents inside the room
     private void setInfoAllAgents(Agent agentInside)
@@ -68,6 +77,12 @@ public class RoomDetector : MonoBehaviour
     {
         foreach (Agent ag in agentsInside)
         {
+            if (agentInside is HonestAgent)
+            {
+                if (ag is TraitorAgent)
+                    ((TraitorAgent)ag).AgentLeft();
+            }
+
             ag.agentsInTheRoom.Remove(agentInside.getAgentName());
         }
     }

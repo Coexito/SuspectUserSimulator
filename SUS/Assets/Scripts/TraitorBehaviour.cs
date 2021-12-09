@@ -91,7 +91,8 @@ public class TraitorBehaviour : MonoBehaviour
 
         // Transitions
         defaultFSM.CreateTransition("born", initialState, born, generalState); // When born, enters the default state & starts looking for work
-        generalFSM.CreateExitTransition("vote called", wanderState, voteCalled, votingState);
+        generalFSM.CreateExitTransition("vote called from wander", wanderState, voteCalled, votingState);
+        generalFSM.CreateExitTransition("vote called from work", workState, voteCalled, votingState);
         defaultFSM.CreateTransition("vote finished", votingState, voteFinished, initialState);
     }
 
@@ -99,21 +100,31 @@ public class TraitorBehaviour : MonoBehaviour
 
     #region EntryUSDataMethods
 
-    //Returns 1 if there's 0, 2 or more honest agents with the traitor (must not kill). Returns 0 if there's 1 honest agents with the traitor (can kill)
+    //Returns 1 if there's 0, 2 or more honest agents with the traitor (must not kill). Returns 0 if there's only 1 honest agents with the traitor (can kill)
     private float Get2OrMoreAgentsInRoom()
     {
-        return 1f;
+        int agentsInRoom = thisAgent.NumberOfHonestAgentsInRoom();
+        if (agentsInRoom == 1)
+        {
+            thisAgent.SetVictim();
+            return 0f;
+        }
+        else
+            return 1f;
     }
 
     private float GetNumberOfAgentsInLastRoom()
     {
-        return 0f;
+        return (float) thisAgent.NumberOfHonestAgentsInLastRoom();
     }
 
     //Returns 0 if a honest agent just left the room
     private float GetAgentLeft()
     {
-        return 0f;
+        if (thisAgent.GetAgentLeft())
+            return 0f;
+        else
+            return 1f;
     }
 
     #endregion
@@ -129,7 +140,23 @@ public class TraitorBehaviour : MonoBehaviour
     private void Kill()
     {
         spriteStateController.SetStateIcon("kill");
-        generalFSM.Fire("decision tomada");
+        thisAgent.GetVictim().gameObject.GetComponent<NavMeshAgent>().speed = 0;
+        agent.speed *= 2;
+        agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
+        StartCoroutine(KillObjective());             
+    }
+
+    private IEnumerator KillObjective()
+    {
+        for (; ; )
+        {
+            if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 2.25f)
+            {
+                SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);                
+                generalFSM.Fire("decision tomada");
+            }
+            yield return new WaitForSeconds(.1f);
+        }
     }
 
     private void Pretend()
