@@ -276,7 +276,7 @@ public class HonestBehaviour : MonoBehaviour
         }
     }
 
-    public void FireSabotage()
+    public IEnumerator FireSabotage()
     {
         agent.speed = 0;
         yield return new WaitForSeconds(timeWorking);

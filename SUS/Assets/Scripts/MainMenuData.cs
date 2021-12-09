@@ -15,15 +15,7 @@ public class MainMenuData : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        honests = 5;
-        traitors = 2;
-        tasks = 50;
         DontDestroyOnLoad(this.gameObject);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-       
-    }
 }

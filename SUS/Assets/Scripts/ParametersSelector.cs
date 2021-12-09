@@ -6,9 +6,9 @@ using TMPro;
 public class ParametersSelector : MonoBehaviour
 {
     private const int upLimitHonest = 20;
-    private const int downLimitHonest = 1;
-    private const int upLimitTraitors = 5;
-    private const int downLimitTraitors = 0;
+    private const int downLimitHonest = 2;
+    private const int upLimitTraitors = 10;
+    private const int downLimitTraitors = 1;
     private const int upLimitTasks = 200;
     private const int downLimitTasks = 10;
     private int honests;
@@ -17,13 +17,20 @@ public class ParametersSelector : MonoBehaviour
 
     GameObject menu;
 
+    TextMeshProUGUI amountHonests;
+    TextMeshProUGUI amountTraitors;
+    TextMeshProUGUI amountTasks;
+
     void Start()
     {
         honests = 7;
         traitors = 3;
         tasks = 30;
         menu = GameObject.Find("MainMenuData");
-        setMainMenuData();
+        
+        amountHonests = transform.Find("ParametersSelector").transform.Find("HonestAgents").transform.Find("Amount").GetComponent<TextMeshProUGUI>();
+        amountTraitors = transform.Find("ParametersSelector/Traitors").transform.Find("Amount").GetComponent<TextMeshProUGUI>();
+        amountTasks = transform.Find("ParametersSelector/Tasks").transform.Find("Amount").GetComponent<TextMeshProUGUI>();
     }
 
     #region ADDERS & REMOVERS
@@ -32,39 +39,37 @@ public class ParametersSelector : MonoBehaviour
     {
         honests++;
         checkLimitsHonest();
-        transform.Find("ParametersSelector").transform.Find("HonestAgents").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(honests.ToString());
-        setMainMenuData();
+        amountHonests.SetText(honests.ToString());
     }
     public void removeAmountHonest()
     {
         honests--;
         checkLimitsHonest();
-        transform.Find("ParametersSelector/HonestAgents").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(honests.ToString());
-        setMainMenuData();
+        amountHonests.SetText(honests.ToString());
     }
     public void addAmountTraitor()
     {
         traitors++;
         checkLimitsTraitor();
-        transform.Find("ParametersSelector/Traitors").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(traitors.ToString());
+        amountTraitors.SetText(traitors.ToString());
     }
     public void removeAmountTraitor()
     {
         traitors--;
         checkLimitsTraitor();
-        transform.Find("ParametersSelector/Traitors").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(traitors.ToString());
+        amountTraitors.SetText(traitors.ToString());
     }
     public void addAmountTasks()
     {
         tasks+=5;
         checkLimitsTasks();
-        transform.Find("ParametersSelector/Tasks").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(tasks.ToString());
+        amountTasks.SetText(tasks.ToString());
     }
     public void removeAmountTasks()
     {
         tasks-=5;
         checkLimitsTasks();
-        transform.Find("ParametersSelector/Tasks").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(tasks.ToString());
+        amountTasks.SetText(tasks.ToString());
     }
     #endregion
 
@@ -93,13 +98,14 @@ public class ParametersSelector : MonoBehaviour
     #endregion
 
     
-    void setMainMenuData()
+    public void setMainMenuData()
     {
-        menu.GetComponent<MainMenuData>().Honests=honests;
+        menu.GetComponent<MainMenuData>().Honests = honests;
         menu.GetComponent<MainMenuData>().Tasks = tasks;
         menu.GetComponent<MainMenuData>().Traitors = traitors;
     }
     public int Traitors { get => traitors; set => traitors = value; }
     public int Tasks { get => tasks; set => tasks = value; }
     public int Honests { get => honests; set => honests = value; }
+
 }

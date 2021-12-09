@@ -13,15 +13,12 @@ public class SceneController : MonoBehaviour
     [SerializeField] private GameObject traitorPrefab;
 
     // World variables
-    [Header("Total tasks needed to win:")] private float TOTAL_TASKS = 10f; //Number of tasks needed to be done by honest agents
+    [Header("Total tasks needed to win:")] private float TOTAL_TASKS; //Number of tasks needed to be done by honest agents
 
     [Header("Total agents:")]
-    [SerializeField] private float totalHonestAgents = 5f; 
-    
-    [SerializeField] private float totalTraitorAgents = 2f;
-
-    [SerializeField] private float totalTasks = 50f;
-    private int tasksDone = 0;
+    private float totalHonestAgents; 
+    private float totalTraitorAgents;
+    private int tasksDone;
 
     [HideInInspector] public bool sabotageHappening;
     private bool gameWasSabotaged = false;    
@@ -53,27 +50,22 @@ public class SceneController : MonoBehaviour
         dataMenu = GameObject.Find("MainMenuData").GetComponent<MainMenuData>();
         totalHonestAgents = dataMenu.Honests;
         totalTraitorAgents = dataMenu.Traitors;
-        totalTasks = dataMenu.Tasks;
-    }
+        TOTAL_TASKS = dataMenu.Tasks;
 
-    private void Start() {
-        
         votesForAgents = new List<Agent>();
         agents = new List<GameObject>();
 
         // Gets the UI elements
         canvas.SetActive(true);
         votePanel = canvas.transform.FindDeepChild("VotePanel").gameObject;
-        voteLogs = votePanel.transform.FindDeepChild("VoteLog").GetComponent<TextMeshProUGUI>();
+        voteLogs = canvas.transform.FindDeepChild("VoteLog").GetComponent<TextMeshProUGUI>();
 
         gameFinishPanel = canvas.transform.FindDeepChild("GameFinishesPanel").gameObject;
-        resultsLogs = gameFinishPanel.transform.FindDeepChild("ResultsLog").GetComponent<TextMeshProUGUI>();
+        resultsLogs = canvas.transform.FindDeepChild("ResultsLog").GetComponent<TextMeshProUGUI>();
 
         honestHUDNumber = canvas.transform.FindDeepChild("HonestNumberTXT").GetComponent<TextMeshProUGUI>();
         traitorHUDNumber = canvas.transform.FindDeepChild("TraitorNumberTXT").GetComponent<TextMeshProUGUI>();
         tasksHUDNumber = canvas.transform.FindDeepChild("TasksNumberTXT").GetComponent<TextMeshProUGUI>();
-
-
     }
 
     private void Start() 
@@ -320,7 +312,6 @@ public class SceneController : MonoBehaviour
 
     public void KillAgent(GameObject ag)
     {
-        voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
         deleteAgentSus(ag.GetComponent<Agent>());
@@ -328,6 +319,7 @@ public class SceneController : MonoBehaviour
         if (ag.GetComponent<Agent>() is HonestAgent)
         {
             agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
+            totalHonestAgents--;
         }
     }
 
