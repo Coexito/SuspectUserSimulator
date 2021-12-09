@@ -8,7 +8,6 @@ public class Agent : MonoBehaviour
     public Dictionary<string, Agent> agentsInTheRoom;  // Agents in the current room (where this agent is)
     public Dictionary<string, Agent> agentsInThe1Room;   // Agents remembered in the last 2 rooms
     public Dictionary<string, Agent> agentsInThe2Room;
-    public Dictionary<string, Agent> sussyAgents;      // Agents suspected (to vote them later)
     private string agentName;
 
     public int[] rooms;
@@ -24,14 +23,10 @@ public class Agent : MonoBehaviour
         agentsInTheRoom = new Dictionary<string, Agent>();
         agentsInThe1Room = new Dictionary<string, Agent>();
         agentsInThe2Room = new Dictionary<string, Agent>();
-        sussyAgents = new Dictionary<string, Agent>();
         agentsInTheRoomList = new List<string>();
         agentsInTheRoomList2 = new List<string>();
         agentsInTheRoomList1 = new List<string>();
         rooms = new int[3];
-        // agentName = "Agent" + Random.Range(0, 10000);
-
-        //this.speed = 5f;
     }
 
     public void SetActualRoom(RoomDetector dt)

@@ -6,6 +6,7 @@ public class HonestAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
     public Dictionary<Agent, int> susValues;
+    public int KillRoom;
    
     public HonestAgent() : base()
     {
@@ -92,7 +93,7 @@ public class HonestAgent : Agent
     }
 
     //Adds  Max values when the agent watch the traitors killing
-    private void addSusValuesWhenWatchKills(Agent ag)
+    public void addSusValuesWhenWatchKills(TraitorAgent ag)
     {
         susValues[ag] = 100;
         CheckMaxAndMinValues(susValues[ag]);
@@ -160,10 +161,19 @@ public class HonestAgent : Agent
                 }
             }
         }
-
+        ReduceSuspiciousValues();
         return GetRandomMostVoted(max);
     }
 
+    //At the end of a votation, we reduce the values of the agents.
+    private void ReduceSuspiciousValues()
+    {
+        foreach(KeyValuePair<Agent, int> ag in susValues)
+        {
+            susValues[ag.Key] -= 10;
+        }
+    }
+    //If some agents have the same suspicious value, we choose a random agent between them.
     private Agent GetRandomMostVoted(Agent agent)
     {
         List<Agent> sameSusAgents = new List<Agent>();

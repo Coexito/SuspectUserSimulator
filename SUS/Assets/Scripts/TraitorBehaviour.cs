@@ -181,16 +181,28 @@ public class TraitorBehaviour : MonoBehaviour
     {
         for (; ; )
         {
-            if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 2.25f)
+            if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 3f)
             {
                 SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);
                 animator.SetBool("isRunning", false);
                 animator.SetBool("isKilling", true);                
                 generalFSM.Fire("decision tomada");
+                notifyKillingToRoomAgents();
             }
             yield return new WaitForSeconds(.1f);
         }
         generalFSM.Fire("decision tomada");
+    }
+
+    private void notifyKillingToRoomAgents()
+    {
+        foreach(KeyValuePair<string,Agent> ag in thisAgent.agentsInTheRoom)
+        {
+            if (ag.Value.GetComponent<HonestAgent>() != null)
+            {
+                ag.Value.GetComponent<HonestAgent>().addSusValuesWhenWatchKills(thisAgent);
+            }
+        }
     }
 
     private void Pretend()
