@@ -29,15 +29,6 @@ public class RoomDetector : MonoBehaviour
             //Adding the roomIndex
             addRoomsInfo(other.gameObject.GetComponent<Agent>());
         }
-
-        //BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE :D
-        other.gameObject.GetComponent<Agent>().clearList();
-        other.gameObject.GetComponent<Agent>().getList();
-        foreach (Agent ag in agentsInside)
-        {
-            ag.clearList();
-            ag.getList();
-        }
     }
 
     //When an agent exits a room
@@ -49,14 +40,6 @@ public class RoomDetector : MonoBehaviour
             agentsInside.Remove(other.gameObject.GetComponent<Agent>());
             updateRoomsDictionary(other.gameObject.GetComponent<Agent>());
             UpdateRoomInfo(other.gameObject.GetComponent<Agent>());
-        }
-        ////BORRAR CUANDO COMPROBEMOS QUE FUNCIONA TODO NICE: D
-        other.gameObject.GetComponent<Agent>().clearList();
-        other.gameObject.GetComponent<Agent>().getList();
-        foreach (Agent ag in agentsInside)
-        {
-            ag.clearList();
-            ag.getList();
         }
     }
 
@@ -122,11 +105,10 @@ public class RoomDetector : MonoBehaviour
 
     private void addRoomsInfo(Agent incomingAgent)
     {
-        incomingAgent.rooms[0] = roomIndex;
+        incomingAgent.rooms.Enqueue(roomIndex);
     }
     private void UpdateRoomInfo(Agent exitAgent)
     {
-        exitAgent.rooms[2] = exitAgent.rooms[1];
-        exitAgent.rooms[1] = exitAgent.rooms[0];
+        exitAgent.rooms.Dequeue();
     }
 }

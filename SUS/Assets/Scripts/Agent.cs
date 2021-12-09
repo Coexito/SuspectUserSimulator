@@ -10,12 +10,7 @@ public class Agent : MonoBehaviour
     public Dictionary<string, Agent> agentsInThe2Room;
     private string agentName;
 
-    public int[] rooms;
-    [SerializeField] private List<string> agentsInTheRoomList;
-    [SerializeField] private List<string> agentsInTheRoomList1;
-    [SerializeField] private List<string> agentsInTheRoomList2;
-    public List<string> agentSus;
-    public List<int> valuesSus;
+    public Queue<int> rooms;
     private RoomDetector actualRoom;
     private Vector3 sabotageTask = Vector3.zero;
 
@@ -24,12 +19,12 @@ public class Agent : MonoBehaviour
         agentsInTheRoom = new Dictionary<string, Agent>();
         agentsInThe1Room = new Dictionary<string, Agent>();
         agentsInThe2Room = new Dictionary<string, Agent>();
-        agentsInTheRoomList = new List<string>();
-        agentsInTheRoomList2 = new List<string>();
-        agentsInTheRoomList1 = new List<string>();
-        agentSus = new List<string>();
-        valuesSus = new List<int>();
-        rooms = new int[3];
+        rooms = new Queue<int>();
+    }
+    private void roomInfo(int room1, int numSala)
+    {
+        if (agentName == "Agent1")
+            Debug.Log(agentName + "Sala num: " + numSala + ": tiene las salas: " + room1);
     }
 
     public void SetActualRoom(RoomDetector dt)
@@ -42,33 +37,6 @@ public class Agent : MonoBehaviour
         return actualRoom;
     }
 
-    public void getList()
-    {
-        foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
-        {
-            agentsInTheRoomList.Add(ag.Key);
-        }
-        foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
-        {
-            agentsInTheRoomList1.Add(ag.Key);
-        }
-        foreach (KeyValuePair<string, Agent> ag in agentsInThe2Room)
-        {
-            agentsInTheRoomList2.Add(ag.Key);
-        }
-    }
-    public void clearList()
-    {
-        agentsInTheRoomList.Clear();
-        agentsInTheRoomList2.Clear();
-        agentsInTheRoomList1.Clear();
-        
-    }
-    public void clearList2()
-    {
-        valuesSus.Clear();
-        agentSus.Clear();
-    }
     public void setSpeed(float s)
     {
         speed = s;

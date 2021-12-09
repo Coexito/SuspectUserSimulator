@@ -59,11 +59,12 @@ public class HonestAgent : Agent
     //Adds Suspicious Valous when called
     public void DecideVote(int room)
     {
-        for (int i = 0; i < rooms.Length; i++)
+        int stackPosition = 0;
+        foreach(int i in rooms)
         {
-            if (rooms[i] == room)
+            if (i == room)
             { 
-                switch (i)
+                switch (stackPosition)
                 {
                     case 0:
                         foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
@@ -85,6 +86,7 @@ public class HonestAgent : Agent
                         break;
                 }
             }
+            stackPosition++;
         }
     }
 
@@ -144,7 +146,6 @@ public class HonestAgent : Agent
     //Returns the Most Suspicious Agent
     public Agent GetMostSuspiciousAgent()
     {
-        ShowAgentsList();
         Agent max = new Agent();
         int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
@@ -180,21 +181,7 @@ public class HonestAgent : Agent
     }
     #endregion
 
-    public void ShowAgentsList()
-    {
-        int i = 0;
-        foreach (KeyValuePair<Agent, int> ag in susValues)
-        {
-            if (i == 0)
-            {
-                Debug.Log("Agente: + " + getAgentName() + "AGENTES GUARDADOS: " + ag.Key.getAgentName() + " CON SOSPECHA DE: " + ag.Value);
-                i = 1;
-            }
-            
-            agentSus.Add(ag.Key.getAgentName());
-            valuesSus.Add(ag.Value);
-        }
-    }
+
     public override void StartSabotage(Vector3 sabotagePos)
     {
         base.StartSabotage(sabotagePos);
