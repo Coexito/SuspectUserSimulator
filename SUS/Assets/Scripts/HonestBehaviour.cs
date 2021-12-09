@@ -278,6 +278,9 @@ public class HonestBehaviour : MonoBehaviour
 
     public void FireSabotage()
     {
+        agent.speed = 0;
+        yield return new WaitForSeconds(timeWorking);
+        agent.speed=thisAgent.getSpeed();
         sabotage = true;
     }
 
