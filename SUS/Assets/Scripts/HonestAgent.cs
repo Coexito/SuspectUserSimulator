@@ -18,11 +18,6 @@ public class HonestAgent : Agent
         susValues = new Dictionary<Agent, int>();
     }
 
-    private void Awake() {
-        agentsFoundInKillingRoom = new Dictionary<string, Agent>();
-        susValues = new Dictionary<Agent, int>();
-    }
-
     private void FixedUpdate()
     {
         if (looking4Corpse)

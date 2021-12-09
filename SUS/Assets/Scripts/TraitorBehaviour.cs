@@ -309,6 +309,8 @@ public class TraitorBehaviour : MonoBehaviour
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
+
+        StopCoroutine(WaitSabotage());
        
         Agent agVoted;
         do
