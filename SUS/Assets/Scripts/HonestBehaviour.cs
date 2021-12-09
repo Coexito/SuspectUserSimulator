@@ -276,11 +276,8 @@ public class HonestBehaviour : MonoBehaviour
         }
     }
 
-    public IEnumerator FireSabotage()
+    public void FireSabotage()
     {
-        agent.speed = 0;
-        yield return new WaitForSeconds(timeWorking);
-        agent.speed=thisAgent.getSpeed();
         sabotage = true;
     }
 
@@ -293,7 +290,7 @@ public class HonestBehaviour : MonoBehaviour
     {
         int itGoes = Random.Range(0, 100);
 
-        if(itGoes < 70)
+        if(itGoes < 60)
         {
             spriteStateController.SetStateIcon("sabotage");
             taskFound = false;
@@ -312,7 +309,7 @@ public class HonestBehaviour : MonoBehaviour
     {        
         for (; ; )
         {
-            if (Vector3.Distance(this.transform.position, sP) < 3)
+            if (Vector3.Distance(this.transform.position, sP) < 3.5)
             {
                 StartCoroutine(FixingSabotage());
                 break;
