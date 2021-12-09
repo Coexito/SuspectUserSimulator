@@ -49,4 +49,24 @@ public class HonestAgent : Agent
         if(behaviour)
             behaviour.FireDie();
     }
+
+    public override void StartSabotage(Vector3 sabotagePos)
+    {
+        base.StartSabotage(sabotagePos);
+
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if (behaviour)
+            behaviour.FireSabotage();
+    }
+
+    public override void EndSabotage()
+    {
+        base.EndSabotage();
+
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if (behaviour)
+            behaviour.EndSabotage();
+    }
 }

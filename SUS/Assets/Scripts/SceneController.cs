@@ -203,6 +203,18 @@ public class SceneController : MonoBehaviour
 
     #endregion
 
+    public void StartSabotage(Vector3 sabotagePos)
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().StartSabotage(sabotagePos);
+    }
+
+    public void EndSabotage()
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().EndSabotage();
+    }
+
     #region Voting functions
     public IEnumerator StartVotation()
     {
