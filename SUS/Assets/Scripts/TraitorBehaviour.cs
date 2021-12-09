@@ -325,6 +325,8 @@ public class TraitorBehaviour : MonoBehaviour
 
     #endregion
 
+    #region OurUtilitySystem
+
     private void TakeDecision()
     {
         //Base factors (data received from the world)
@@ -336,35 +338,18 @@ public class TraitorBehaviour : MonoBehaviour
         float fear2 = GetAgentLeft();
 
         //Graph factors
-        float fear1 = (-agentsInLastRoom) + 1;
+        float fear1 = (-agentsInLastRoom) + 1; //Linear curve
 
         List<Point2D> points = new List<Point2D>();
         points.Add(new Point2D(0, 0));
         points.Add(new Point2D(0.15f, 0));
-        points.Add(new Point2D(0.4f, 0.25f));
-        points.Add(new Point2D(0.5f, 0.5f));
-        points.Add(new Point2D(0.6f, 0.75f));
-        points.Add(new Point2D(0.85f, 1));
-        points.Add(new Point2D(1, 1));
+        points.Add(new Point2D(0.25f, 0.2f));
+        points.Add(new Point2D(0.3f, 0.6f));
+        points.Add(new Point2D(0.4f, 0.9f));
+        points.Add(new Point2D(0.6f, 1));
+        points.Add(new Point2D(1, 1));        
 
-        float returnValue = 0.0f;
-        float x = tasksCompleted;
-
-        for (int i = 0; i < points.Count; i++)
-        {
-            float xPoint = points[i].x;
-            if (i == 0 && x < xPoint) { returnValue = points[i].y; break; };
-            if ((i == points.Count - 1) && x > xPoint) { returnValue = points[i].y; break; };
-            if (x == xPoint) { returnValue = points[i].y; break; }
-
-            if (x > xPoint && x < points[i + 1].x)
-            {
-                returnValue = ((x - xPoint) / (points[i + 1].x - xPoint)) * (points[i + 1].y - points[i].y) + points[i].y;
-                break;
-            }
-        }
-
-        float riskToLose = returnValue; //Decisive factor
+        float riskToLose = GetSigmoidCurve(tasksCompleted, points); //Decisive factor
 
         //Fusion factors
         List<float> factors = new List<float>();
@@ -374,16 +359,8 @@ public class TraitorBehaviour : MonoBehaviour
         List<float> weights = new List<float>();
         weights.Add(0.5f);
         weights.Add(0.5f);
-
-        float sum = 0.0f;
-        for (int i = 0; i < factors.Count; i++)
-        {
-            float factor = factors[i];
-
-            sum += factor * weights[i];
-        }
-
-        float fearToBeDiscovered = sum;
+        
+        float fearToBeDiscovered = GetWeighedSumFactor(factors, weights);
 
         factors.Clear();
         factors.Add(riskToLose);
@@ -394,16 +371,8 @@ public class TraitorBehaviour : MonoBehaviour
         weights.Add(0.2f);
         weights.Add(0.3f);
         weights.Add(0.5f);
-
-        sum = 0.0f;
-        for (int i = 0; i < factors.Count; i++)
-        {
-            float factor = factors[i];
-
-            sum += factor * weights[i];
-        }
-
-        float killingNeed = sum; //Decisive factor
+                
+        float killingNeed = GetWeighedSumFactor(factors, weights); //Decisive factor
 
         float[] decisiveFactors = { needToPretend, riskToLose, killingNeed };
 
@@ -421,5 +390,42 @@ public class TraitorBehaviour : MonoBehaviour
         {
             Pretend();
         }  
+    }    
+
+    private float GetSigmoidCurve(float factor, List<Point2D> points)
+    {
+        float returnValue = 0.0f;
+        float x = factor;
+
+        for (int i = 0; i < points.Count; i++)
+        {
+            float xPoint = points[i].x;
+            if (i == 0 && x < xPoint) { returnValue = points[i].y; break; };
+            if ((i == points.Count - 1) && x > xPoint) { returnValue = points[i].y; break; };
+            if (x == xPoint) { returnValue = points[i].y; break; }
+
+            if (x > xPoint && x < points[i + 1].x)
+            {
+                returnValue = ((x - xPoint) / (points[i + 1].x - xPoint)) * (points[i + 1].y - points[i].y) + points[i].y;
+                break;
+            }
+        }
+
+        return returnValue;
     }
+
+    private float GetWeighedSumFactor(List<float> factors, List<float> weights)
+    {
+        float sum = 0.0f;
+        for (int i = 0; i < factors.Count; i++)
+        {
+            float factor = factors[i];
+
+            sum += factor * weights[i];
+        }
+
+        return sum;
+    }
+
+    #endregion
 }
