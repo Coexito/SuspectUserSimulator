@@ -47,7 +47,6 @@ public class SceneController : MonoBehaviour
         availableTasks = new List<Vector3>();
         agentsWaitingForTask = new List<HonestBehaviour>();
         votesForAgents = new List<Agent>();
-        canvas = GameObject.Find("Canvas");
         agents = new List<GameObject>();
 
         // Gets the UI elements
