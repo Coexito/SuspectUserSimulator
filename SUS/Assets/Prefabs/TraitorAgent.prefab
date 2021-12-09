@@ -997,7 +997,7 @@ GameObject:
   - component: {fileID: 779677970864192706}
   - component: {fileID: -8614233109849234338}
   - component: {fileID: 307716304402831458}
-  - component: {fileID: 5416165962105107352}
+  - component: {fileID: -4826552915651931152}
   m_Layer: 8
   m_Name: TraitorAgent
   m_TagString: Traitor
@@ -1130,7 +1130,7 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!95 &5416165962105107352
+--- !u!95 &-4826552915651931152
 Animator:
   serializedVersion: 3
   m_ObjectHideFlags: 0

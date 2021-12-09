@@ -174,7 +174,8 @@ public class TraitorBehaviour : MonoBehaviour
         thisAgent.GetVictim().gameObject.GetComponent<NavMeshAgent>().speed = 0;
         agent.speed *= 2;
         agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
-        StartCoroutine(KillObjective());             
+        StartCoroutine(KillObjective());    
+               
     }
 
     private IEnumerator KillObjective()
@@ -183,15 +184,16 @@ public class TraitorBehaviour : MonoBehaviour
         {
             if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 3f)
             {
-                SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);
                 animator.SetBool("isRunning", false);
-                animator.SetBool("isKilling", true);                
-                generalFSM.Fire("decision tomada");
-                notifyKillingToRoomAgents();
+                animator.SetBool("isKilling", true);     
+                break;     
             }
             yield return new WaitForSeconds(.1f);
         }
+        notifyKillingToRoomAgents();
+        SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);
         generalFSM.Fire("decision tomada");
+        
     }
 
     private void notifyKillingToRoomAgents()

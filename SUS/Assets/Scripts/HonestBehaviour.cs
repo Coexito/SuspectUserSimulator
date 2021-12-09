@@ -276,8 +276,11 @@ public class HonestBehaviour : MonoBehaviour
         }
     }
 
-    public void FireSabotage()
+    public IEnumerator FireSabotage()
     {
+        agent.speed = 0;
+        yield return new WaitForSeconds(timeWorking);
+        agent.speed=thisAgent.getSpeed();
         sabotage = true;
     }
 
@@ -402,4 +405,5 @@ public class HonestBehaviour : MonoBehaviour
     #region Setters&Getters
     public bool Killed { get => killed; set => killed = value; }
     #endregion
+
 }
