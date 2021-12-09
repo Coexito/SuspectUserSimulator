@@ -14,7 +14,8 @@ public class Agent : MonoBehaviour
     [SerializeField] private List<string> agentsInTheRoomList;
     [SerializeField] private List<string> agentsInTheRoomList1;
     [SerializeField] private List<string> agentsInTheRoomList2;
-
+    public List<string> agentSus;
+    public List<int> valuesSus;
     private RoomDetector actualRoom;
     private Vector3 sabotageTask = Vector3.zero;
 
@@ -26,6 +27,8 @@ public class Agent : MonoBehaviour
         agentsInTheRoomList = new List<string>();
         agentsInTheRoomList2 = new List<string>();
         agentsInTheRoomList1 = new List<string>();
+        agentSus = new List<string>();
+        valuesSus = new List<int>();
         rooms = new int[3];
     }
 
@@ -59,6 +62,12 @@ public class Agent : MonoBehaviour
         agentsInTheRoomList.Clear();
         agentsInTheRoomList2.Clear();
         agentsInTheRoomList1.Clear();
+        
+    }
+    public void clearList2()
+    {
+        valuesSus.Clear();
+        agentSus.Clear();
     }
     public void setSpeed(float s)
     {

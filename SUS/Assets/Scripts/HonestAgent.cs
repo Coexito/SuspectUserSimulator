@@ -62,8 +62,7 @@ public class HonestAgent : Agent
         for (int i = 0; i < rooms.Length; i++)
         {
             if (rooms[i] == room)
-            {
-               
+            { 
                 switch (i)
                 {
                     case 0:
@@ -128,7 +127,11 @@ public class HonestAgent : Agent
     {
         for(int i = 0; i < agents.Count; i++)
         {
-            susValues.Add(agents[i].GetComponent<Agent>(),0);
+            if (agents[i].GetComponent<HonestAgent>() != this)
+            {
+                susValues.Add(agents[i].GetComponent<Agent>(), 0);
+            }
+            
         }
     }
 
@@ -141,7 +144,7 @@ public class HonestAgent : Agent
     //Returns the Most Suspicious Agent
     public Agent GetMostSuspiciousAgent()
     {
-        //ShowAgentsList();
+        ShowAgentsList();
         Agent max = new Agent();
         int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
@@ -157,18 +160,9 @@ public class HonestAgent : Agent
                     max = ag.Key; 
             }
         }
-        ReduceSuspiciousValues();
         return GetRandomMostVoted(max);
     }
 
-    //At the end of a votation, we reduce the values of the agents.
-    private void ReduceSuspiciousValues()
-    {
-        foreach(KeyValuePair<Agent, int> ag in susValues)
-        {
-            susValues[ag.Key] -= 10;
-        }
-    }
     //If some agents have the same suspicious value, we choose a random agent between them.
     private Agent GetRandomMostVoted(Agent agent)
     {
@@ -176,7 +170,7 @@ public class HonestAgent : Agent
         sameSusAgents.Add(agent);
         foreach (KeyValuePair<Agent, int> ag in susValues)
         {
-            if(susValues[agent] == ag.Value)
+            if (susValues[agent] == ag.Value)
             {
                 sameSusAgents.Add(ag.Key);
             }
@@ -188,9 +182,17 @@ public class HonestAgent : Agent
 
     public void ShowAgentsList()
     {
+        int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
         {
-            Debug.Log("AGENTES GUARDADOS: " + ag.Key.getAgentName());
+            if (i == 0)
+            {
+                Debug.Log("Agente: + " + getAgentName() + "AGENTES GUARDADOS: " + ag.Key.getAgentName() + " CON SOSPECHA DE: " + ag.Value);
+                i = 1;
+            }
+            
+            agentSus.Add(ag.Key.getAgentName());
+            valuesSus.Add(ag.Value);
         }
     }
     public override void StartSabotage(Vector3 sabotagePos)
