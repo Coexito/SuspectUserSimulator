@@ -6,7 +6,11 @@ public class HonestAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
     public Dictionary<Agent, int> susValues;
-    public int KillRoom;
+
+    private Agent corpseFound;
+    private int corpseRoom = -1;
+    private bool looking4Corpse = true;
+    //public int KillRoom;
    
     public HonestAgent() : base()
     {
@@ -19,8 +23,75 @@ public class HonestAgent : Agent
         susValues = new Dictionary<Agent, int>();
     }
 
-    private void Start() 
+    private void FixedUpdate()
     {
+        if (looking4Corpse)
+            CheckForCorpses();
+    }
+
+    private void CheckForCorpses()
+    {
+        RoomDetector room = GetActualRoom();
+        if(room != null && this != null)
+        {
+            List<Agent> corpses = room.corpsesInside;
+            if (corpses.Count != 0)
+            {
+                foreach (Agent corpse in corpses)
+                {
+                    if(corpse != null)
+                    {
+                        if (!corpse.Equals(this))
+                        {
+                            Vector3 vC = corpse.gameObject.transform.position - this.gameObject.transform.position;
+                            float distanceToC = vC.magnitude;
+                            if (distanceToC < 25)
+                            {
+                                float angleToC = Vector3.Angle(this.gameObject.transform.forward, vC);
+                                if (angleToC <= 60)
+                                {
+                                    corpseFound = corpse;
+                                    corpseRoom = rooms[0];                                    
+                                    looking4Corpse = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }                                       
+                }
+                room.CorpseFound(corpseFound);
+            }
+        }        
+    }
+
+    public int GetCorpseRoom()
+    {
+        return corpseRoom;
+    }
+
+    public Agent GetCorpse()
+    {
+        return corpseFound;
+    }
+
+    public void SetCorpseRoom(int cR)
+    {
+        corpseRoom = cR;
+    }
+
+    public void SetCorpseFound(Agent c)
+    {
+        corpseFound = c;
+    }
+
+    public void SetLooking4Corpses(bool l4c)
+    {
+        looking4Corpse = l4c;
+    }
+
+    public bool GetLooking4Corpses()
+    {
+        return looking4Corpse;
     }
 
 

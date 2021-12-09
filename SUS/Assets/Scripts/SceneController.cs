@@ -87,18 +87,6 @@ public class SceneController : MonoBehaviour
         AssignTasks();  // Assigns tasks to the agents waiting for it
 
         CheckGameStatus(); // Checks if the simulation has to end or continue
-
-        // -------- PARA PRUEBAS, BORRAR LUEGO ------------
-        if(Input.GetKeyDown(KeyCode.Space))
-            KillAgent(agents[0]);
-        else if (Input.GetKeyDown(KeyCode.V))
-            StartCoroutine(StartVotation());
-        else if (Input.GetKeyDown(KeyCode.F))
-            FinishVotation();
-        else if(Input.GetKeyDown(KeyCode.P))
-            EndSimulation("All tasks done.\n\nHonest workers win.");
-        //--------------------------------------------------
-
     }
 
     #region Game management
@@ -199,7 +187,7 @@ public class SceneController : MonoBehaviour
         return hit.position;
     }
 
-    #endregion
+    #endregion    
 
     public void StartSabotage(Vector3 sabotagePos)
     {
@@ -227,18 +215,26 @@ public class SceneController : MonoBehaviour
     }
 
     #region Voting functions
-    public IEnumerator StartVotation()
+    public IEnumerator StartVotation(int cRoom, Agent corpse)
     {
         voteLogs.SetText("");
         votePanel.SetActive(true);  // Opens the canvas
         finishVotationBtn.SetActive(false);
+        EndSabotage();
 
         foreach (GameObject ag in agents)
         {
+            if (ag.GetComponent<HonestAgent>() != null)
+            {
+                ag.GetComponent<HonestAgent>().SetLooking4Corpses(false);
+                ag.GetComponent<HonestAgent>().SetCorpseFound(null);
+                ag.GetComponent<HonestAgent>().SetCorpseRoom(-1);
+            }
+
             ag.GetComponent<Agent>().StartVote();
             /////////////////////////////////////////////////////////////////////////////// CAMBIAR 1 POR LA SALA
             if (ag.GetComponent<HonestAgent>() != null)
-                ag.GetComponent<HonestAgent>().DecideVote(2);
+                ag.GetComponent<HonestAgent>().DecideVote(cRoom);
         }
             
         yield return new WaitForSeconds(0.5f);
@@ -251,6 +247,9 @@ public class SceneController : MonoBehaviour
         EjectAgent(agent);
         voteLogs.text += "\n" + agent.getAgentName() + " was the most voted agent.\n\n";
         finishVotationBtn.SetActive(true);
+
+        //Ejects the corpse
+        EjectAgent(corpse);
 
         // Now the user has to finish the votation by pressing the button...
         // (executes FinishVotation)
