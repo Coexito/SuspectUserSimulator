@@ -15,8 +15,9 @@ public class TraitorBehaviour : MonoBehaviour
 
     private TraitorAgent thisAgent;
     private NavMeshAgent agent;
-    [SerializeField] private Vector3 currentTask = Vector3.zero;
+    private Animator animator;
 
+    [SerializeField] private Vector3 currentTask = Vector3.zero;
     [SerializeField] private float timeWorking = 5f;
 
     private bool vote = false;
@@ -34,6 +35,8 @@ public class TraitorBehaviour : MonoBehaviour
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
         agent.speed = thisAgent.getSpeed();
 
+        animator = GetComponent<Animator>();
+
         generalFSM = new StateMachineEngine(true);
         defaultFSM = new StateMachineEngine();
 
@@ -48,6 +51,13 @@ public class TraitorBehaviour : MonoBehaviour
     {  
         generalFSM.Update();
         defaultFSM.Update();
+
+        if(GetComponent<Rigidbody>().velocity == Vector3.zero)    // If the agent stays in place
+        {
+            animator.SetBool("isWalking", false);
+            animator.SetBool("isRunning", false);
+        }
+            
     }
 
     private void Start() 
@@ -140,6 +150,8 @@ public class TraitorBehaviour : MonoBehaviour
     private void Kill()
     {
         spriteStateController.SetStateIcon("kill");
+        animator.SetBool("isRunning", true);
+
         thisAgent.GetVictim().gameObject.GetComponent<NavMeshAgent>().speed = 0;
         agent.speed *= 2;
         agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
@@ -152,7 +164,9 @@ public class TraitorBehaviour : MonoBehaviour
         {
             if (Vector3.Distance(this.transform.position, thisAgent.GetVictim().gameObject.transform.position) < 2.25f)
             {
-                SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);                
+                SceneController.instance.KillAgent(thisAgent.GetVictim().gameObject);
+                animator.SetBool("isRunning", false);
+                animator.SetBool("isKilling", true);                
                 generalFSM.Fire("decision tomada");
             }
             yield return new WaitForSeconds(.1f);
@@ -182,7 +196,7 @@ public class TraitorBehaviour : MonoBehaviour
     {
         for(;;)
         {
-            if (Vector3.Distance(this.transform.position, currentTask) < 3)
+            if (Vector3.Distance(this.transform.position, currentTask) < 3.5)
             {
                 Work();
             }
@@ -193,6 +207,8 @@ public class TraitorBehaviour : MonoBehaviour
     private void Work()
     {
         spriteStateController.SetStateIcon("work");
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isWorking", true);
         StartCoroutine(TimerWork());
     }
 
@@ -203,6 +219,7 @@ public class TraitorBehaviour : MonoBehaviour
         yield return new WaitForSeconds(timeWorking);
         agent.speed = thisAgent.getSpeed();
         currentTask = Vector3.zero;
+        animator.SetBool("isWorking", false);
         generalFSM.Fire("decision tomada");
     }
 
@@ -214,6 +231,11 @@ public class TraitorBehaviour : MonoBehaviour
     {
         spriteStateController.SetStateIcon("think");
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
+        
+        animator.SetBool("isWorking", false);
+        animator.SetBool("isRunning", false);
+        animator.SetBool("isKilling", false);
+        animator.SetBool("isWalking", true);
 
         agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task     
           
@@ -245,6 +267,9 @@ public class TraitorBehaviour : MonoBehaviour
         agent.speed = 0;
         agent.SetDestination(transform.position);
         spriteStateController.SetStateIcon("vote");
+        animator.SetBool("isRunning", false);
+        animator.SetBool("isKilling", false);
+        animator.SetBool("isWalking", false);
     }
 
     public void FireVote()

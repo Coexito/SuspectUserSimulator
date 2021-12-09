@@ -125,8 +125,6 @@ public class SceneController : MonoBehaviour
         votePanel.SetActive(false);
         resultsLogs.SetText(finalMessage);
         gameFinishPanel.SetActive(true);
-
-        Time.timeScale = 0;
     }
 
     public void ResetSimulation()
@@ -172,7 +170,7 @@ public class SceneController : MonoBehaviour
         }
     }
 
-    private void KillAgent(GameObject ag)
+    public void KillAgent(GameObject ag)
     {
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
