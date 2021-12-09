@@ -60,7 +60,7 @@ public class RoomDetector : MonoBehaviour
         }
     }
 
-    public void AgentKilledInRoom(HonestAgent victim)
+    public void AgentKilledInRoom(Agent victim)
     {
         removeInfoAllAgents(victim);
         agentsInside.Remove(victim);

@@ -282,6 +282,7 @@ public class SceneController : MonoBehaviour
         if(ag != null)
         {
             agents.Remove(ag.gameObject);
+            ag.GetActualRoom().AgentKilledInRoom(ag);
 
             if(ag is HonestAgent)
             {
