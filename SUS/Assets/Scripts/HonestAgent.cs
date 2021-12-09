@@ -172,7 +172,7 @@ public class HonestAgent : Agent
         {
             if(susValues[agent] == ag.Value)
             {
-                Debug.Log(getAgentName() + ": Tiene el agente: " + agent.getAgentName() + "Una sospecha de: " + susValues[agent] + "Y añade a la lista al agente: " + ag.Key.getAgentName() + "con sospecha: " + ag.Value);
+                Debug.Log(getAgentName() + ": Tiene el agente: " + agent.getAgentName() + "Una sospecha de: " + susValues[agent] + "Y anade a la lista al agente: " + ag.Key.getAgentName() + "con sospecha: " + ag.Value);
                 sameSusAgents.Add(ag.Key);
             }
         }
@@ -187,5 +187,24 @@ public class HonestAgent : Agent
         {
             Debug.Log("AGENTES GUARDADOS: " + ag.Key.getAgentName());
         }
+    }
+    public override void StartSabotage(Vector3 sabotagePos)
+    {
+        base.StartSabotage(sabotagePos);
+
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if (behaviour)
+            behaviour.FireSabotage();
+    }
+
+    public override void EndSabotage()
+    {
+        base.EndSabotage();
+
+        HonestBehaviour behaviour = GetComponent<HonestBehaviour>();
+
+        if (behaviour)
+            behaviour.EndSabotage();
     }
 }

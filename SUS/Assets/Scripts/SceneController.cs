@@ -189,6 +189,18 @@ public class SceneController : MonoBehaviour
 
     #endregion
 
+    public void StartSabotage(Vector3 sabotagePos)
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().StartSabotage(sabotagePos);
+    }
+
+    public void EndSabotage()
+    {
+        foreach (GameObject ag in agents)
+            ag.GetComponent<Agent>().EndSabotage();
+    }
+
     #region Voting functions
     public IEnumerator StartVotation()
     {
@@ -264,7 +276,9 @@ public class SceneController : MonoBehaviour
         {
             agents.Remove(ag.gameObject);
             deleteAgentSus(ag.GetComponent<Agent>());
-            if (ag is HonestAgent) { 
+            ag.GetActualRoom().AgentKilledInRoom(ag);
+            if(ag is HonestAgent)
+            {
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
                 totalHonestAgents--;
             }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
- 
+
 
 public class Agent : MonoBehaviour
 {
@@ -17,6 +17,8 @@ public class Agent : MonoBehaviour
     [SerializeField] private List<string> agentsInTheRoomList2;
 
     private RoomDetector actualRoom;
+    private Vector3 sabotageTask = Vector3.zero;
+
     public Agent()
     {
         agentsInTheRoom = new Dictionary<string, Agent>();
@@ -31,9 +33,7 @@ public class Agent : MonoBehaviour
 
         //this.speed = 5f;
     }
-    
-    
-        
+
     public void SetActualRoom(RoomDetector dt)
     {
         actualRoom = dt;
@@ -47,7 +47,7 @@ public class Agent : MonoBehaviour
     public void getList()
     {
         foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
-        { 
+        {
             agentsInTheRoomList.Add(ag.Key);
         }
         foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
@@ -74,17 +74,29 @@ public class Agent : MonoBehaviour
         return this.speed;
     }
 
-    public string getAgentName() {
+    public string getAgentName()
+    {
         return this.agentName;
     }
 
-    public void setAgentName(string s) {
+    public void setAgentName(string s)
+    {
         this.agentName = s;
     }
-    
+
     public virtual void StartVote() { }
 
     public virtual void FinishVote() { }
 
     public virtual void Die() { }
+
+    public virtual void StartSabotage(Vector3 sabotagePos) { sabotageTask = sabotagePos; }
+
+    public virtual void EndSabotage() { }
+
+    public Vector3 GetSabotagePoint()
+    {
+        return sabotageTask;
+    }
+
 }
