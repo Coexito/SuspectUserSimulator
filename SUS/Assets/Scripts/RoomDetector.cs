@@ -128,6 +128,5 @@ public class RoomDetector : MonoBehaviour
     {
         exitAgent.rooms[2] = exitAgent.rooms[1];
         exitAgent.rooms[1] = exitAgent.rooms[0];
-        
     }
 }
