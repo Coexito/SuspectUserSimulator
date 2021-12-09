@@ -298,8 +298,6 @@ public class TraitorBehaviour : MonoBehaviour
         // Random agent
         int r = Random.Range(0, SceneController.instance.agents.Count);
         Agent agVoted = SceneController.instance.agents[r].GetComponent<Agent>();
-        //Debug.Log(honest.thisAgent.getAgentName());
-        //Debug.Log(ag.getAgentName());
 
         // Votes the agent
         SceneController.instance.VoteAgent(thisAgent, agVoted);

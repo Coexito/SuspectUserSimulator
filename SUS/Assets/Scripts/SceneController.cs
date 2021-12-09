@@ -20,8 +20,10 @@ public class SceneController : MonoBehaviour
     private float totalTraitorAgents;
     private int tasksDone;
 
+    float secondsToLooseOnSabotage = 15f;
     [HideInInspector] public bool sabotageHappening;
     private bool gameWasSabotaged = false;    
+    private bool activeSabotage = false;
 
     // Data structures
     MainMenuData dataMenu;
@@ -203,10 +205,23 @@ public class SceneController : MonoBehaviour
     {
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().StartSabotage(sabotagePos);
+
+        activeSabotage = true;
+        StartCoroutine(SabotageHappening());
+    }
+
+    private IEnumerator SabotageHappening()
+    {
+        yield return new WaitForSeconds(secondsToLooseOnSabotage);
+
+        if(activeSabotage)
+            gameWasSabotaged = true;
     }
 
     public void EndSabotage()
     {
+        activeSabotage = false;
+
         foreach (GameObject ag in agents)
             ag.GetComponent<Agent>().EndSabotage();
     }
