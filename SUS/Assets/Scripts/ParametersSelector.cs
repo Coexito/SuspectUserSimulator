@@ -17,6 +17,15 @@ public class ParametersSelector : MonoBehaviour
 
     GameObject menu;
 
+    void Start()
+    {
+        honests = 7;
+        traitors = 3;
+        tasks = 30;
+        menu = GameObject.Find("MainMenuData");
+        setMainMenuData();
+    }
+
     #region ADDERS & REMOVERS
 
     public void addAmountHonest()
@@ -47,13 +56,13 @@ public class ParametersSelector : MonoBehaviour
     }
     public void addAmountTasks()
     {
-        tasks+=10;
+        tasks+=5;
         checkLimitsTasks();
         transform.Find("ParametersSelector/Tasks").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(tasks.ToString());
     }
     public void removeAmountTasks()
     {
-        tasks-=10;
+        tasks-=5;
         checkLimitsTasks();
         transform.Find("ParametersSelector/Tasks").transform.Find("Amount").GetComponent<TextMeshProUGUI>().SetText(tasks.ToString());
     }
@@ -83,14 +92,7 @@ public class ParametersSelector : MonoBehaviour
     }
     #endregion
 
-    void Start()
-    {
-        honests = 5;
-        traitors = 2;
-        tasks = 50;
-        menu = GameObject.Find("MainMenuData");
-        setMainMenuData();
-    }
+    
     void setMainMenuData()
     {
         menu.GetComponent<MainMenuData>().Honests=honests;
