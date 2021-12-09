@@ -6,9 +6,11 @@ public class HonestAgent : Agent
 {
     public Dictionary<string, Agent> agentsFoundInKillingRoom;
     public Dictionary<Agent, int> susValues;
+   
     public HonestAgent() : base()
-    { 
-        
+    {
+        agentsFoundInKillingRoom = new Dictionary<string, Agent>();
+        susValues = new Dictionary<Agent, int>();
     }
 
     private void Awake() {
@@ -18,7 +20,6 @@ public class HonestAgent : Agent
 
     private void Start() 
     {
-        
     }
 
 
@@ -29,6 +30,7 @@ public class HonestAgent : Agent
 
         if(behaviour)
             behaviour.FireVote();
+
 
     }
 
@@ -53,8 +55,42 @@ public class HonestAgent : Agent
 
     #region SuspiciousFunctions
 
+    //Adds Suspicious Valous when called
+    public void DecideVote(int room)
+    {
+        for (int i = 0; i < rooms.Length; i++)
+        {
+            if (rooms[i] == room)
+            {
+                switch (i)
+                {
+                    case 0:
+                        foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
+                        {
+                            addSusValuesWhenCloseToTheBody(ag.Value);
+                        }
+                        break;
+                    case 1:
+                        foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
+                        {
+                            Debug.Log("Hola");
+                            //addSusValuesWhenCloseToTheBodyRoom(ag.Value);
+                        }
+                        break;
+                    case 2:
+                        foreach (KeyValuePair<string, Agent> ag in agentsInThe2Room)
+                        {
+                            Debug.Log("Hola");
+                            //addSusValuesWhenCloseToTheSecondBodyRoom(ag.Value);
+                        }
+                        break;
+                }
+            }
+        }
+    }
+
     //Adds  Max values when the agent watch the traitors killing
-    public void addSusValuesWhenWatchKills(Agent ag)
+    private void addSusValuesWhenWatchKills(Agent ag)
     {
         susValues[ag] = 100;
         CheckMaxAndMinValues(susValues[ag]);
@@ -70,6 +106,11 @@ public class HonestAgent : Agent
     public void addSusValuesWhenCloseToTheBodyRoom(Agent ag)
     {
         susValues[ag] += 30;
+        CheckMaxAndMinValues(susValues[ag]);
+    }
+    public void addSusValuesWhenCloseToTheSecondBodyRoom(Agent ag)
+    {
+        susValues[ag] += 15;
         CheckMaxAndMinValues(susValues[ag]);
     }
 
@@ -100,17 +141,35 @@ public class HonestAgent : Agent
     //Returns the Most Suspicious Agent
     public Agent GetMostSuspiciousAgent()
     {
+        ShowAgentsList();
         Agent max = new Agent();
         int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
         {
+            Debug.Log("2Se sustituye: un agente con : "  + ag.Key.getAgentName()+ " con valor " + ag.Value);
             if (i == 0)
+            {
                 max = ag.Key;
+                i = 1;
+            }
             else
-                if (susValues[max] < ag.Value)
-                max = ag.Key;
+            {
+                if (susValues[max] < ag.Value) {
+                    Debug.Log("3Se sustituye: un agente con : " + ag.Key.getAgentName() + " por " + ag.Key.getAgentName());
+                    max = ag.Key; 
+                }
+            }
+           
         }
         return max;
     }
     #endregion
+
+    public void ShowAgentsList()
+    {
+        foreach (KeyValuePair<Agent, int> ag in susValues)
+        {
+            Debug.Log("AGENTES GUARDADOS: " + ag.Key.getAgentName());
+        }
+    }
 }

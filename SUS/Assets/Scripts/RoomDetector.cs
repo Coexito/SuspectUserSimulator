@@ -57,10 +57,8 @@ public class RoomDetector : MonoBehaviour
     //Add the incoming agent to all agents inside the room
     private void setInfoAllAgents(Agent agentInside)
     {
-        Debug.Log("Holass :D" + agentInside.gameObject.GetComponent<Agent>());
         foreach (Agent ag in agentsInside)
         {
-            Debug.Log("Adios :D" + ag.gameObject.GetComponent<Agent>());
             ag.agentsInTheRoom.Add(agentInside.getAgentName(), agentInside);
         }
     }
@@ -78,10 +76,7 @@ public class RoomDetector : MonoBehaviour
     private void addInsideAgents(Agent incomingAgent)
     {
         foreach (Agent ag in agentsInside)
-        {
-            Debug.Log("A: " + ag.getAgentName());
             incomingAgent.agentsInTheRoom.Add(ag.getAgentName(), ag);
-        }
     }
 
     //Adding all the info to the last 2 rooms.

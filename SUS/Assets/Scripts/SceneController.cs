@@ -41,11 +41,13 @@ public class SceneController : MonoBehaviour
         voteLogs = GameObject.Find("VoteLog").GetComponent<TextMeshProUGUI>();
         votesForAgents = new List<Agent>();
         canvas = GameObject.Find("Canvas");
+        agents = new List<GameObject>();
     }
 
     private void Start() {
         SpawnAgents();
         canvas.SetActive(false);
+        setAgentsInfo();
     }
 
     private void Update() {
@@ -81,11 +83,6 @@ public class SceneController : MonoBehaviour
         }
     }
 
-    public void AddAgent(GameObject a)
-    {
-        agents.Add(a);
-    }
-
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
         // Get Random Point inside Sphere which position is center, radius is maxDistance
         Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
@@ -105,7 +102,12 @@ public class SceneController : MonoBehaviour
         canvas.SetActive(true);  // Opens the canvas
 
         foreach (GameObject ag in agents)
+        {
             ag.GetComponent<Agent>().StartVote();
+            /////////////////////////////////////////////////////////////////////////////// CAMBIAR 1 POR LA SALA
+            if (ag.GetComponent<HonestAgent>() != null)
+                ag.GetComponent<HonestAgent>().DecideVote(0);
+        }
             
         yield return new WaitForSeconds(1f);
 
@@ -166,8 +168,8 @@ public class SceneController : MonoBehaviour
         if(ag != null)
         {
             agents.Remove(ag.gameObject);
-
-            if(ag is HonestAgent)
+            deleteAgentSus(ag.GetComponent<Agent>());
+            if (ag is HonestAgent)
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
 
             Destroy(ag.gameObject);
@@ -193,8 +195,9 @@ public class SceneController : MonoBehaviour
         voteLogs.SetText(ag.GetComponent<Agent>().getAgentName() + " has been ejected.");
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
+        deleteAgentSus(ag.GetComponent<Agent>());
 
-        if(ag.GetComponent<Agent>() is HonestAgent)
+        if (ag.GetComponent<Agent>() is HonestAgent)
         {
             agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
         }
@@ -258,5 +261,25 @@ public class SceneController : MonoBehaviour
         return totalTraitorAgents;
     }
 
+    #endregion
+
+    #region SuspiciousInfo
+    private void setAgentsInfo()
+    {
+        foreach(GameObject ag in agents)
+        {
+            if(ag.GetComponent<HonestAgent>()!=null)
+                ag.GetComponent<HonestAgent>().GetAllAgents(agents);
+        }
+    }
+
+    private void deleteAgentSus(Agent sus)
+    {
+        foreach (GameObject ag in agents)
+        {
+            if (ag.GetComponent<HonestAgent>() != null)
+                ag.GetComponent<HonestAgent>().removeAgent(sus);
+        }
+    }
     #endregion
 }
