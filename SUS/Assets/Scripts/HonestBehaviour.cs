@@ -12,9 +12,10 @@ public class HonestBehaviour : MonoBehaviour
 
     public HonestAgent thisAgent;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
-    [SerializeField] private float distanceToRandomWalk = 50f;
+    [SerializeField] private float distanceToRandomWalk = 100f;
 
     private NavMeshAgent agent;
+    private Animator animator;
     [SerializeField] private Vector3 currentTask = Vector3.zero;
     private bool taskFound = false;
     private bool vote = false;
@@ -34,6 +35,8 @@ public class HonestBehaviour : MonoBehaviour
 
         agent = GetComponent<NavMeshAgent>(); // Gets the navmeshagent
         agent.speed = thisAgent.getSpeed();
+
+        animator = GetComponent<Animator>();
 
         //Work Behaviour Tree
         workBT = new BehaviourTreeEngine(true);
@@ -60,6 +63,11 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM.Update();
         generalFSM.Update();
 
+        if(agent.speed == 0)    // If the agent stays in place
+        {
+            animator.SetBool("Idle", true);
+        }
+            
     }
 
     private void CreateFMS()
@@ -133,14 +141,17 @@ public class HonestBehaviour : MonoBehaviour
     {
         notWorking = true;
         spriteStateController.SetStateIcon("wander");   // the state without caps!!
+        animator.SetBool("isWalking", true);
 
-        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.blue);
         SceneController.instance.IWantATask(this);  // Asks for a task
 
         agent.speed = thisAgent.getSpeed(); // Sets the default speed
 
-        agent.SetDestination(GetRandomPoint(transform.position, distanceToRandomWalk));  // Walks randomly until given a task        
+        // Walks randomly until given a task 
+        Vector3 randomPos = GetRandomPoint(transform.position, distanceToRandomWalk);
+        agent.SetDestination(randomPos);
     }
+
 
     // Get Random Point on a Navmesh surface
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
@@ -174,9 +185,11 @@ public class HonestBehaviour : MonoBehaviour
             
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
-        Debug.Log("Voting...");
-
         spriteStateController.SetStateIcon("vote");
+
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isWorking", false);
+
         SceneController.instance.DeleteAgentsWaitingForTask(this);
 
         // Dismisses his task
@@ -184,7 +197,6 @@ public class HonestBehaviour : MonoBehaviour
         currentTask = Vector3.zero;
         agent.speed = 0;
         agent.SetDestination(transform.position);
-        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.white);
 
         /*
             Vote random agent (TO BE CHANGED)
@@ -223,13 +235,11 @@ public class HonestBehaviour : MonoBehaviour
 
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
-        Debug.Log("Im dead :(");
         spriteStateController.SetStateIcon("die");
         thisAgent.GetActualRoom().AgentKilledInRoom((HonestAgent) thisAgent);
         this.GetComponentInParent<CapsuleCollider>().enabled = false;
+        animator.SetTrigger("Die");
         agent.SetDestination(transform.position);
-        this.GetComponentInParent<Renderer>().material.SetColor("_Color", Color.black);
-        //Destroy(this.gameObject);
     }
 
     public void FireDie()
@@ -274,6 +284,10 @@ public class HonestBehaviour : MonoBehaviour
     private void WorkBT()
     {
         spriteStateController.SetStateIcon("work");
+
+        animator.SetBool("isWalking", false);
+        animator.SetBool("isWorking", true);
+
         StartCoroutine(TimerWork());        
     }
 
@@ -295,7 +309,7 @@ public class HonestBehaviour : MonoBehaviour
         else
         {
             // Checks if agent position is task position
-            if (Vector3.Distance(this.transform.position, currentTask) < 3)
+            if (Vector3.Distance(this.transform.position, currentTask) < 3.5f)
             {
                 notWorking = false;
                 return ReturnValues.Succeed;
@@ -315,6 +329,7 @@ public class HonestBehaviour : MonoBehaviour
             {
                 SceneController.instance.TaskDone();
                 currentTask = Vector3.zero;
+                animator.SetBool("isWorking", false);
                 return ReturnValues.Succeed;
             }
             else

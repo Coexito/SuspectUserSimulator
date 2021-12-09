@@ -9,7 +9,7 @@ public class TraitorBehaviour : MonoBehaviour
     private StateMachineEngine defaultFSM;
     private StateMachineEngine generalFSM;
 
-    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private int cooldown = 2;
+    [SerializeField] [Range(0, 20)] [Header("Cooldown time in seconds:")] private float cooldown = 0.5f;
     [SerializeField] [Header("Agent speed:")] private float defaultSpeed = 5f;
     [SerializeField] private float distanceToRandomWalk = 50f;
 

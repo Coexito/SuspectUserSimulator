@@ -111,7 +111,7 @@ public class SceneController : MonoBehaviour
             // Honest agents win, simulation finishes
             EndSimulation("All traitors ejected.\n\nHonest workers win.");
         }
-        else if(totalTraitorAgents >= totalHonestAgents) // Traitors outnumber honests
+        else if(totalTraitorAgents > totalHonestAgents) // Traitors outnumber honests
         {
             // Traitor agents win, simulation finishes
             EndSimulation("There aren't enough honest workers.\n\nTraitors win.");
@@ -176,12 +176,7 @@ public class SceneController : MonoBehaviour
         }
     }
 
-    public void AddAgent(GameObject a)
-    {
-        agents.Add(a);
-    }
-
-    public void KillAgent(GameObject ag)
+    private void KillAgent(GameObject ag)
     {
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
