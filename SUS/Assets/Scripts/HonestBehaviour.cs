@@ -64,7 +64,10 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM.Update();
         generalFSM.Update();
 
-        if(GetComponent<Rigidbody>().velocity == Vector3.zero)    // If the agent stays in place
+        if (!thisAgent.GetLooking4Corpses())
+            emergency = true;
+
+        if (GetComponent<Rigidbody>().velocity == Vector3.zero)    // If the agent stays in place
             animator.SetBool("isWalking", false);
             
     }
@@ -120,6 +123,7 @@ public class HonestBehaviour : MonoBehaviour
         defaultFSM.CreateExitTransition("dead agent", wanderState, deadAgentFound, emergencyState);
         defaultFSM.CreateExitTransition("sabotage fired", wanderState, sabotageFired, sabotageState);
         generalFSM.CreateTransition("sabotage ended", sabotageState, sabotageEnded, initialState);
+        generalFSM.CreateTransition("killed in em", emergencyState, youWereKilled, deadState);
 
     }
     private void CreateBT()
@@ -146,6 +150,7 @@ public class HonestBehaviour : MonoBehaviour
     private void Wander()
     {
         notWorking = true;
+        thisAgent.SetLooking4Corpses(true);
         spriteStateController.SetStateIcon("wander");   // the state without caps!!
         animator.SetBool("isWalking", true);
 
@@ -196,6 +201,8 @@ public class HonestBehaviour : MonoBehaviour
         animator.SetBool("isWalking", false);
         animator.SetBool("isWorking", false);
 
+        emergency = false;
+
         SceneController.instance.DeleteAgentsWaitingForTask(this);
 
         // Dismisses his task
@@ -242,8 +249,7 @@ public class HonestBehaviour : MonoBehaviour
             Hay que asegurarse de que el agente se para, pq si no el navmesh puede dar problemas
         */
         spriteStateController.SetStateIcon("die");
-        thisAgent.GetActualRoom().AgentKilledInRoom((HonestAgent) thisAgent);
-        this.GetComponentInParent<CapsuleCollider>().enabled = false;
+        thisAgent.GetActualRoom().AgentKilledInRoom((HonestAgent) thisAgent);        
         animator.SetTrigger("Die");
         agent.SetDestination(transform.position);
     }
@@ -266,14 +272,13 @@ public class HonestBehaviour : MonoBehaviour
     {
         for (; ; )
         {
-            if (Vector3.Distance(this.transform.position, SceneController.instance.EMERGENCY_POINT) < 3)
+            if (Vector3.Distance(this.transform.position, SceneController.instance.EMERGENCY_POINT) < 4)
             {
-                emergency = false;
-                StartCoroutine(SceneController.instance.StartVotation());
                 break;
             }
             yield return new WaitForSeconds(.1f);
         }
+        StartCoroutine(SceneController.instance.StartVotation(thisAgent.GetCorpseRoom(), thisAgent.GetCorpse()));
     }
 
     public void FireSabotage()
@@ -293,6 +298,8 @@ public class HonestBehaviour : MonoBehaviour
         if(itGoes < 60)
         {
             spriteStateController.SetStateIcon("sabotage");
+            animator.SetBool("isWorking", false);
+            animator.SetBool("isWalking", true);
             taskFound = false;
             currentTask = Vector3.zero;
             Vector3 sP = thisAgent.GetSabotagePoint();

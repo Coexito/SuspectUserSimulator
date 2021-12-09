@@ -4,12 +4,14 @@ using UnityEngine;
 public class RoomDetector : MonoBehaviour
 {
     public List<Agent> agentsInside;
+    public List<Agent> corpsesInside;
     public int roomIndex;
 
     // Start is called before the first frame update
     void Start()
     {
         agentsInside = new List<Agent>();
+        corpsesInside =  new List<Agent>();
         //roomIndex = this.gameObject.name();
     }
     
@@ -65,6 +67,12 @@ public class RoomDetector : MonoBehaviour
         removeInfoAllAgents(victim);
         agentsInside.Remove(victim);
         updateRoomsDictionary(victim);
+        corpsesInside.Add(victim);
+    }
+
+    public void CorpseFound(Agent corpse)
+    {
+        corpsesInside.Remove(corpse);
     }
 
 

@@ -171,11 +171,18 @@ public class TraitorBehaviour : MonoBehaviour
         spriteStateController.SetStateIcon("kill");
         animator.SetBool("isRunning", true);
 
-        thisAgent.GetVictim().gameObject.GetComponent<NavMeshAgent>().speed = 0;
-        agent.speed *= 2;
-        agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
-        StartCoroutine(KillObjective());    
-               
+        if (thisAgent.GetVictim() != null)
+        {
+            thisAgent.GetVictim().gameObject.GetComponent<NavMeshAgent>().speed = 0;
+            thisAgent.GetVictim().gameObject.GetComponentInParent<Rigidbody>().isKinematic = true;
+            agent.speed *= 2;
+            agent.SetDestination(thisAgent.GetVictim().gameObject.transform.position);
+            StartCoroutine(KillObjective());
+        }
+        else
+        {
+            generalFSM.Fire("decision tomada");
+        } 
     }
 
     private IEnumerator KillObjective()
