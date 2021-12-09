@@ -68,21 +68,18 @@ public class HonestAgent : Agent
                     case 0:
                         foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
                         {
-                            Debug.Log(getAgentName() + "Sumando valor sala actual" + ag.Value.getAgentName());
                             addSusValuesWhenCloseToTheBody(ag.Value);
                         }
                         break;
                     case 1:
                         foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
                         {
-                            Debug.Log("Hola");
                             addSusValuesWhenCloseToTheBodyRoom(ag.Value);
                         }
                         break;
                     case 2:
                         foreach (KeyValuePair<string, Agent> ag in agentsInThe2Room)
                         {
-                            Debug.Log("Hola");
                             addSusValuesWhenCloseToTheSecondBodyRoom(ag.Value);
                         }
                         break;
@@ -143,7 +140,7 @@ public class HonestAgent : Agent
     //Returns the Most Suspicious Agent
     public Agent GetMostSuspiciousAgent()
     {
-        ShowAgentsList();
+        //ShowAgentsList();
         Agent max = new Agent();
         int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
@@ -155,9 +152,8 @@ public class HonestAgent : Agent
             }
             else
             {
-                if (susValues[max] < ag.Value) {
+                if (susValues[max] < ag.Value)
                     max = ag.Key; 
-                }
             }
         }
 
@@ -172,7 +168,6 @@ public class HonestAgent : Agent
         {
             if(susValues[agent] == ag.Value)
             {
-                Debug.Log(getAgentName() + ": Tiene el agente: " + agent.getAgentName() + "Una sospecha de: " + susValues[agent] + "Y anade a la lista al agente: " + ag.Key.getAgentName() + "con sospecha: " + ag.Value);
                 sameSusAgents.Add(ag.Key);
             }
         }
