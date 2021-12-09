@@ -70,7 +70,6 @@ public class SceneController : MonoBehaviour
     private void Start() 
     {
         SpawnAgents();
-        canvas.SetActive(false);
         setAgentsInfo();
         votePanel.SetActive(false);
         gameFinishPanel.SetActive(false);
@@ -176,18 +175,6 @@ public class SceneController : MonoBehaviour
         }
     }
 
-    private void KillAgent(GameObject ag)
-    {
-        ag.GetComponent<Agent>().Die();
-        agents.Remove(ag);
-
-        if(ag.GetComponent<Agent>() is HonestAgent)
-        {
-            agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
-            totalHonestAgents--;
-        }
-    }
-
     private Vector3 GetRandomPoint(Vector3 center, float maxDistance) {
         // Get Random Point inside Sphere which position is center, radius is maxDistance
         Vector3 randomPos = Random.insideUnitSphere * maxDistance + center;
@@ -213,7 +200,7 @@ public class SceneController : MonoBehaviour
             ag.GetComponent<Agent>().StartVote();
             /////////////////////////////////////////////////////////////////////////////// CAMBIAR 1 POR LA SALA
             if (ag.GetComponent<HonestAgent>() != null)
-                ag.GetComponent<HonestAgent>().DecideVote(0);
+                ag.GetComponent<HonestAgent>().DecideVote(2);
         }
             
         yield return new WaitForSeconds(0.5f);
@@ -268,6 +255,8 @@ public class SceneController : MonoBehaviour
         
         return a;
     }
+
+
 
     private void EjectAgent(Agent ag)
     {

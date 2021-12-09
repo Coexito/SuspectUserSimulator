@@ -62,11 +62,13 @@ public class HonestAgent : Agent
         {
             if (rooms[i] == room)
             {
+               
                 switch (i)
                 {
                     case 0:
                         foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
                         {
+                            Debug.Log(getAgentName() + "Sumando valor sala actual" + ag.Value.getAgentName());
                             addSusValuesWhenCloseToTheBody(ag.Value);
                         }
                         break;
@@ -74,14 +76,14 @@ public class HonestAgent : Agent
                         foreach (KeyValuePair<string, Agent> ag in agentsInThe1Room)
                         {
                             Debug.Log("Hola");
-                            //addSusValuesWhenCloseToTheBodyRoom(ag.Value);
+                            addSusValuesWhenCloseToTheBodyRoom(ag.Value);
                         }
                         break;
                     case 2:
                         foreach (KeyValuePair<string, Agent> ag in agentsInThe2Room)
                         {
                             Debug.Log("Hola");
-                            //addSusValuesWhenCloseToTheSecondBodyRoom(ag.Value);
+                            addSusValuesWhenCloseToTheSecondBodyRoom(ag.Value);
                         }
                         break;
                 }
@@ -146,7 +148,6 @@ public class HonestAgent : Agent
         int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
         {
-            Debug.Log("2Se sustituye: un agente con : "  + ag.Key.getAgentName()+ " con valor " + ag.Value);
             if (i == 0)
             {
                 max = ag.Key;
@@ -155,13 +156,28 @@ public class HonestAgent : Agent
             else
             {
                 if (susValues[max] < ag.Value) {
-                    Debug.Log("3Se sustituye: un agente con : " + ag.Key.getAgentName() + " por " + ag.Key.getAgentName());
                     max = ag.Key; 
                 }
             }
-           
         }
-        return max;
+
+        return GetRandomMostVoted(max);
+    }
+
+    private Agent GetRandomMostVoted(Agent agent)
+    {
+        List<Agent> sameSusAgents = new List<Agent>();
+        sameSusAgents.Add(agent);
+        foreach (KeyValuePair<Agent, int> ag in susValues)
+        {
+            if(susValues[agent] == ag.Value)
+            {
+                Debug.Log(getAgentName() + ": Tiene el agente: " + agent.getAgentName() + "Una sospecha de: " + susValues[agent] + "Y añade a la lista al agente: " + ag.Key.getAgentName() + "con sospecha: " + ag.Value);
+                sameSusAgents.Add(ag.Key);
+            }
+        }
+        int random = Random.Range(0, sameSusAgents.Count);
+        return sameSusAgents[random];
     }
     #endregion
 
