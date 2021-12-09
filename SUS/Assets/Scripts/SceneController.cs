@@ -301,10 +301,10 @@ public class SceneController : MonoBehaviour
     {
         if(ag != null)
         {
-            agents.Remove(ag.gameObject);
-            deleteAgentSus(ag.GetComponent<Agent>());
+            agents.Remove(ag.gameObject);            
             ag.GetActualRoom().AgentKilledInRoom(ag);
-            if(ag is HonestAgent)
+            deleteAgentSus(ag.GetComponent<Agent>());
+            if (ag is HonestAgent)
             {
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
                 totalHonestAgents--;
@@ -333,6 +333,7 @@ public class SceneController : MonoBehaviour
     {
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
+        ag.GetComponent<Agent>().GetActualRoom().AgentKilledInRoom(ag.GetComponent<Agent>());
         deleteAgentSus(ag.GetComponent<Agent>());
 
         if (ag.GetComponent<Agent>() is HonestAgent)
