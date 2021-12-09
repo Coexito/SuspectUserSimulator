@@ -3158,6 +3158,7 @@ MonoBehaviour:
   agentsInTheRoomList: []
   agentsInTheRoomList1: []
   agentsInTheRoomList2: []
+  KillRoom: 0
 --- !u!114 &7449881045837147737
 MonoBehaviour:
   m_ObjectHideFlags: 0

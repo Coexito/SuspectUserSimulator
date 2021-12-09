@@ -10,6 +10,7 @@ public class HonestAgent : Agent
     private Agent corpseFound;
     private int corpseRoom = -1;
     private bool looking4Corpse = true;
+    //public int KillRoom;
    
     public HonestAgent() : base()
     {
@@ -129,12 +130,12 @@ public class HonestAgent : Agent
     //Adds Suspicious Valous when called
     public void DecideVote(int room)
     {
-        for (int i = 0; i < rooms.Length; i++)
+        int stackPosition = 0;
+        foreach(int i in rooms)
         {
-            if (rooms[i] == room)
-            {
-               
-                switch (i)
+            if (i == room)
+            { 
+                switch (stackPosition)
                 {
                     case 0:
                         foreach (KeyValuePair<string, Agent> ag in agentsInTheRoom)
@@ -156,11 +157,12 @@ public class HonestAgent : Agent
                         break;
                 }
             }
+            stackPosition++;
         }
     }
 
     //Adds  Max values when the agent watch the traitors killing
-    private void addSusValuesWhenWatchKills(Agent ag)
+    public void addSusValuesWhenWatchKills(TraitorAgent ag)
     {
         susValues[ag] = 100;
         CheckMaxAndMinValues(susValues[ag]);
@@ -198,7 +200,11 @@ public class HonestAgent : Agent
     {
         for(int i = 0; i < agents.Count; i++)
         {
-            susValues.Add(agents[i].GetComponent<Agent>(),0);
+            if (agents[i].GetComponent<HonestAgent>() != this)
+            {
+                susValues.Add(agents[i].GetComponent<Agent>(), 0);
+            }
+            
         }
     }
 
@@ -211,7 +217,6 @@ public class HonestAgent : Agent
     //Returns the Most Suspicious Agent
     public Agent GetMostSuspiciousAgent()
     {
-        //ShowAgentsList();
         Agent max = new Agent();
         int i = 0;
         foreach (KeyValuePair<Agent, int> ag in susValues)
@@ -227,17 +232,17 @@ public class HonestAgent : Agent
                     max = ag.Key; 
             }
         }
-
         return GetRandomMostVoted(max);
     }
 
+    //If some agents have the same suspicious value, we choose a random agent between them.
     private Agent GetRandomMostVoted(Agent agent)
     {
         List<Agent> sameSusAgents = new List<Agent>();
         sameSusAgents.Add(agent);
         foreach (KeyValuePair<Agent, int> ag in susValues)
         {
-            if(susValues[agent] == ag.Value)
+            if (susValues[agent] == ag.Value)
             {
                 sameSusAgents.Add(ag.Key);
             }
@@ -247,13 +252,7 @@ public class HonestAgent : Agent
     }
     #endregion
 
-    public void ShowAgentsList()
-    {
-        foreach (KeyValuePair<Agent, int> ag in susValues)
-        {
-            Debug.Log("AGENTES GUARDADOS: " + ag.Key.getAgentName());
-        }
-    }
+
     public override void StartSabotage(Vector3 sabotagePos)
     {
         base.StartSabotage(sabotagePos);

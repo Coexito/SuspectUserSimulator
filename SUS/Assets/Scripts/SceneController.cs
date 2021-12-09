@@ -101,17 +101,17 @@ public class SceneController : MonoBehaviour
         else if(totalTraitorAgents == 0) // All traitors are ejected
         {
             // Honest agents win, simulation finishes
-            EndSimulation("All traitors ejected.\n\nHonest workers win.");
+            EndSimulation("All Impostors ejected.\n\nHonest workers win.");
         }
         else if(totalTraitorAgents > totalHonestAgents) // Traitors outnumber honests
         {
             // Traitor agents win, simulation finishes
-            EndSimulation("There aren't enough honest workers.\n\nTraitors win.");
+            EndSimulation("There aren't enough honest workers.\n\nImpostors win.");
         }
         else if(gameWasSabotaged) // Game succesfully sabotaged
         {
             // Traitor agents win, simulation finishes
-            EndSimulation("The sabotage succeeded.\n\nTraitors win.");
+            EndSimulation("The sabotage succeeded.\n\nImpostors win.");
         }
 
     }
@@ -152,26 +152,26 @@ public class SceneController : MonoBehaviour
             for(int i = 0; i < totalHonestAgents; i++)
             {
                 GameObject h = Instantiate(honestPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-                string name = "Agent" + (i+1);
+                string name = "Worker" + (i+1);
                 h.name = name;
                 h.GetComponent<HonestAgent>().setAgentName(name);
                 agents.Add(h);
             }
         }
-        catch(UnassignedReferenceException e) { Debug.Log("Error spawning an honest agent."); }
+        catch(UnassignedReferenceException e) { Debug.Log("Error spawning a worker agent."); }
 
         try
         {
             for (int i = 0; i < totalTraitorAgents; i++)
             {
                 GameObject t = Instantiate(traitorPrefab, GetRandomPoint(new Vector3(-15f, 5f, 0f), 50f), Quaternion.identity);
-                string name = "Traitor" + (i+1);
+                string name = "Impostor" + (i+1);
                 t.name = name;
                 t.GetComponent<TraitorAgent>().setAgentName(name);
                 agents.Add(t);
             }
         }
-        catch(UnassignedReferenceException e) { Debug.Log("Error spawning a traitor agent."); }
+        catch(UnassignedReferenceException e) { Debug.Log("Error spawning an impostor agent."); }
         
     }
 
@@ -300,10 +300,10 @@ public class SceneController : MonoBehaviour
     {
         if(ag != null)
         {
-            agents.Remove(ag.gameObject);
-            deleteAgentSus(ag.GetComponent<Agent>());
+            agents.Remove(ag.gameObject);            
             ag.GetActualRoom().AgentKilledInRoom(ag);
-            if(ag is HonestAgent)
+            deleteAgentSus(ag.GetComponent<Agent>());
+            if (ag is HonestAgent)
             {
                 agentsWaitingForTask.Remove(ag.GetComponent<HonestBehaviour>());
                 totalHonestAgents--;
@@ -332,6 +332,7 @@ public class SceneController : MonoBehaviour
     {
         ag.GetComponent<Agent>().Die();
         agents.Remove(ag);
+        ag.GetComponent<Agent>().GetActualRoom().AgentKilledInRoom(ag.GetComponent<Agent>());
         deleteAgentSus(ag.GetComponent<Agent>());
 
         if (ag.GetComponent<Agent>() is HonestAgent)

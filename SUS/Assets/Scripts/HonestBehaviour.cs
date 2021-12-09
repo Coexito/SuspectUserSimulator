@@ -295,7 +295,7 @@ public class HonestBehaviour : MonoBehaviour
     {
         int itGoes = Random.Range(0, 100);
 
-        if(itGoes < 60)
+        if(itGoes < 60) // Posibility to go fix the sabotage
         {
             spriteStateController.SetStateIcon("sabotage");
             animator.SetBool("isWorking", false);
